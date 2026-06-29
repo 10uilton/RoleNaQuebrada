@@ -1,0 +1,2864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rolê na Quebrada (10uilton) V18</title>
+<style>
+body{
+margin:0;
+background:#111;
+color:#fff;
+font-family:Arial;
+overflow:hidden;
+}
+
+.wrap{
+max-width:420px;
+margin:auto;
+padding:4px;
+}
+
+.top{
+display:flex;
+flex-direction:column;
+gap:4px;
+margin-bottom:4px;
+}
+
+#hud{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#1b1b1b;
+padding:6px 8px;
+border-radius:12px;
+font-size:13px;
+border:2px solid #333;
+}
+
+.hudItem{
+display:flex;
+align-items:center;
+gap:3px;
+}
+
+.topBtns{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:6px;
+}
+
+.topBtns button{
+font-size:12px;
+padding:6px 10px;
+border:none;
+border-radius:8px;
+background:#333;
+color:white;
+}
+
+.radioStatus{
+flex:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:2px;
+padding:4px 6px;
+}
+
+.radioStatus .ledRow{
+display:flex;
+align-items:center;
+gap:5px;
+font-size:11px;
+font-weight:bold;
+letter-spacing:0.3px;
+}
+
+.led{
+width:8px;
+height:8px;
+border-radius:50%;
+background:#3a0d0d;
+box-shadow:0 0 2px rgba(0,0,0,0.6) inset;
+transition:background 0.15s, box-shadow 0.15s;
+}
+
+.led.on{
+background:#ff3b3b;
+box-shadow:0 0 6px 2px rgba(255,59,59,0.9);
+animation:ledPulse 1.1s infinite;
+}
+
+@keyframes ledPulse{
+0%,100%{ opacity:1; }
+50%{ opacity:0.45; }
+}
+
+.radioStatus .statusTxt{
+font-size:9px;
+color:#999;
+}
+
+canvas{
+width:100%;
+height:auto;
+border:3px solid #444;
+border-radius:12px;
+touch-action:none;
+}
+
+.controls{
+display:flex;
+justify-content:center;
+gap:8px;
+margin-top:4px;
+}
+
+.ctrl{
+flex:1;
+max-width:72px;
+height:62px;
+font-size:24px;
+border:none;
+border-radius:12px;
+background:#2b2b2b;
+color:white;
+}
+
+.ctrl.activeRadio{
+background:#1f4d2b;
+box-shadow:0 0 0 2px #2ecc71 inset;
+}
+</style>
+</head>
+<body>
+<style>
+#menu{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:24px;overflow:hidden;background:#0a0a14;}
+#menuBg{position:absolute;inset:0;overflow:hidden;}
+.mSky{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%,#1a0a2e 0%,#0a0a14 70%);}
+.mGlow{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;}
+.mCity{position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(to top,#0a0a14 0%,transparent 100%);}
+
+/* Badge HTML canto superior direito */
+.mBadge{
+  position:absolute;top:10px;right:10px;z-index:10;
+  background:#e8000d;color:#fff;font-size:9px;font-weight:900;
+  letter-spacing:2px;padding:3px 10px;border-radius:3px;font-family:Arial;
+}
+
+#menuContent{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;gap:0;}
+
+/* TÍTULO HERO — ocupa a parte de cima */
+.mTitleHero{
+  width:100%;
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding:0 10px;
+  margin-top:0;
+  margin-bottom:2px;
+  font-family:Impact,Arial Black,sans-serif;
+  line-height:0.88;
+}
+
+/* Linha 1: R[RODA]LÊ NA */
+.mLine1{display:flex;align-items:center;gap:0;white-space:nowrap;padding-left:4px;}
+.mTxtRolê{
+  font-size:clamp(72px,22vw,110px);
+  color:#fff;
+  text-shadow:-4px 4px 0 #000,4px 4px 0 #000,-2px -2px 0 #000;
+  letter-spacing:-2px;
+  line-height:1;
+}
+.mTxtNa{
+  font-size:clamp(40px,12vw,62px);
+  color:#fff;
+  text-shadow:-2px 2px 0 #000;
+  letter-spacing:2px;
+  margin-left:10px;
+  line-height:1;
+  align-self:flex-end;
+  padding-bottom:4px;
+}
+/* Linha 2: CITY + opala */
+.mLine2{display:flex;align-items:flex-end;gap:0;width:100%;position:relative;}
+.mTxtCity{
+  font-size:clamp(54px,17vw,92px);
+  background:linear-gradient(180deg,#ff8c00 0%,#ff4500 55%,#cc2200 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-2px;
+  line-height:1.05;
+  padding-bottom:4px;
+}
+
+/* Roda animada — substitui o O */
+#wheelCanvas{
+  display:inline-block;
+  vertical-align:middle;
+  margin:0 1px;
+  /* tamanho vai ser setado pelo JS via width/height attr */
+}
+
+/* Opala lateral no canto direito da linha CITY */
+#opalaCanvas{
+  position:absolute;
+  right:6px;
+  bottom:0;
+}
+
+.mDivider{width:calc(100% - 20px);height:3px;background:linear-gradient(90deg,#e8000d,#ff6600,#e8000d);margin:6px 10px 10px;border-radius:2px;}
+
+.mRadio{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.mRadioCircle{width:44px;height:44px;border-radius:50%;background:#111;border:2px solid #ff6600;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.mRadioText{text-align:left;}
+.mRadioName{font-family:Arial Black,sans-serif;font-size:14px;font-weight:900;color:#fff;line-height:1.1;}
+.mRadioSub{font-size:10px;color:#ff8c00;font-family:Arial;letter-spacing:0.5px;}
+
+.mBtns{display:flex;flex-direction:column;gap:10px;width:300px;}
+.mBtn{width:100%;padding:13px 0;border:none;border-radius:10px;font-size:17px;font-weight:900;font-family:Arial Black,sans-serif;cursor:pointer;letter-spacing:0.5px;transition:transform 0.1s;position:relative;overflow:hidden;}
+.mBtn:active{transform:scale(0.97);}
+.mBtnPrimary{background:linear-gradient(180deg,#ff8c00,#cc4400);color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.mBtnStripe{position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);animation:mShine 2.5s infinite;}
+@keyframes mShine{0%{left:-100%}50%,100%{left:150%}}
+
+.mFooter{font-size:11px;color:#666;font-family:Arial;margin-top:12px;letter-spacing:0.3px;}
+.mFooter span{color:#ff6600;}
+.mSocial{display:flex;gap:8px;margin-top:10px;margin-bottom:4px;}
+.mSocBtn{display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:10px;text-decoration:none;font-family:Arial Black,sans-serif;font-size:12px;font-weight:900;color:#fff;transition:transform 0.1s,filter 0.1s;letter-spacing:0.3px;}
+.mSocBtn:active{transform:scale(0.95);}
+.mSocFb{background:#1877f2;}
+.mSocIg{background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4);}
+.mSocX{background:#000;border:1.5px solid #333;}
+
+/* Botão info canto superior esquerdo */
+.mInfoBtn{
+  position:absolute;top:10px;left:10px;z-index:10;
+  width:34px;height:34px;border-radius:50%;border:2px solid #ff6600;
+  background:rgba(0,0,0,0.55);color:#ff8c00;font-size:17px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-family:Arial Black,sans-serif;transition:background 0.15s,transform 0.1s;
+}
+.mInfoBtn:active{transform:scale(0.92);}
+
+/* ===== MENU DESCRIÇÃO ===== */
+#menuDesc{
+  position:fixed;inset:0;z-index:100;
+  display:none;flex-direction:column;align-items:center;
+  background:#060610;overflow:hidden;
+}
+#descBg{position:absolute;inset:0;overflow:hidden;}
+#descCanvas{position:absolute;inset:0;width:100%;height:100%;}
+
+#descContent{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;height:100%;
+  padding:0 18px 24px;
+  box-sizing:border-box;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.dHeader{
+  width:100%;display:flex;align-items:center;justify-content:center;
+  padding-top:18px;margin-bottom:10px;position:relative;
+}
+.dTitleWrap{
+  display:flex;flex-direction:column;align-items:center;
+}
+.dLabel{
+  font-size:10px;font-family:Arial;font-weight:900;letter-spacing:4px;
+  color:#ff6600;margin-bottom:2px;
+}
+.dTitle{
+  font-family:Impact,Arial Black,sans-serif;
+  font-size:clamp(36px,10vw,52px);
+  background:linear-gradient(180deg,#ff8c00 0%,#ff4500 60%,#cc2200 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-1px;line-height:1;
+  text-align:center;
+}
+.dDivider{
+  width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,#ff6600,#e8000d,#ff6600,transparent);
+  margin:8px 0 14px;border-radius:2px;
+  position:relative;overflow:hidden;
+}
+.dDivider::after{
+  content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
+  animation:dShine 2s infinite;
+}
+@keyframes dShine{0%{left:-60%}100%{left:130%}}
+
+.dCarCard{
+  width:100%;max-width:340px;
+  background:linear-gradient(135deg,rgba(20,10,40,0.9),rgba(10,5,20,0.95));
+  border:1px solid rgba(255,100,0,0.3);border-radius:16px;
+  padding:16px 16px 12px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+  box-shadow:0 0 30px rgba(255,80,0,0.12);
+}
+.dCarCard::before{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,100,0,0.06),transparent 60%);
+  pointer-events:none;
+}
+#descCarCanvas{display:block;margin:0 auto 6px;}
+.dCarLabel{text-align:center;font-size:10px;font-family:Arial;color:#888;letter-spacing:2px;}
+
+.dFeatures{width:100%;max-width:340px;display:flex;flex-direction:column;gap:9px;margin-bottom:14px;}
+.dFeat{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:10px 12px;
+}
+.dFeatIcon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.dFeatText{flex:1;}
+.dFeatTitle{font-family:Arial Black,sans-serif;font-size:11px;font-weight:900;color:#ff8c00;letter-spacing:0.5px;margin-bottom:3px;}
+.dFeatDesc{font-family:Arial;font-size:12px;color:#bbb;line-height:1.45;}
+
+.dMade{
+  font-family:Arial;font-size:11px;color:#555;letter-spacing:0.5px;
+  margin-bottom:16px;text-align:center;
+}
+.dMade span{color:#ff6600;font-weight:900;}
+
+.dBackBtn{
+  width:calc(100% - 0px);max-width:304px;
+  padding:13px 0;border:none;border-radius:10px;
+  font-size:16px;font-weight:900;font-family:Arial Black,sans-serif;
+  cursor:pointer;letter-spacing:0.5px;transition:transform 0.1s;
+  background:linear-gradient(180deg,#333,#1a1a1a);
+  color:#fff;border:1.5px solid #444;
+}
+.dBackBtn:active{transform:scale(0.97);}
+</style>
+
+<div id="menu">
+<div class="mBadge">HTML</div>
+<button class="mInfoBtn" onclick="openDesc()" title="Sobre o jogo">i</button>
+<div id="menuBg">
+ <div class="mSky"></div>
+ <div class="mGlow" style="left:55%;top:15%;width:180px;height:180px;background:#6600cc;opacity:0.35;"></div>
+ <div class="mGlow" style="left:10%;top:40%;background:#ff4400;opacity:0.2;width:120px;height:120px;"></div>
+ <div class="mGlow" style="left:70%;top:50%;background:#0044ff;opacity:0.2;width:100px;height:100px;"></div>
+ <canvas id="menuCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+ <div class="mCity"></div>
+</div>
+<div id="menuContent">
+
+ <!-- TÍTULO HERO -->
+ <div class="mTitleHero">
+  <!-- Linha 1: R + RODA ANIMADA + LÊ NA -->
+  <div class="mLine1">
+   <span class="mTxtRolê" id="mTxtR">R</span>
+   <canvas id="wheelCanvas"></canvas>
+   <span class="mTxtRolê">LÊ</span>
+   <span class="mTxtNa">NA</span>
+  </div>
+  <!-- Linha 2: QUEBRADA -->
+  <div class="mLine2">
+   <span class="mTxtCity">QUEBRADA</span>
+  </div>
+ </div>
+
+ <div class="mDivider"></div>
+
+ <div class="mRadio">
+  <div class="mRadioCircle">📻</div>
+  <div class="mRadioText">
+   <div class="mRadioName">RÁDIO 10UILTON</div>
+   <div class="mRadioSub">10uilton.blogspot.com</div>
+  </div>
+ </div>
+
+ <div class="mBtns">
+  <button id="continueBtn" onclick="continueGame()" class="mBtn mBtnPrimary" style="display:none">
+   <span class="mBtnStripe"></span>▶️ CONTINUAR
+  </button>
+  <button onclick="newGame()" class="mBtn mBtnPrimary">
+   <span class="mBtnStripe"></span>🆕 NOVO JOGO
+  </button>
+ </div>
+
+ <div class="mSocial">
+  <a href="https://www.facebook.com/10uilton" target="_blank" class="mSocBtn mSocFb">
+   <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+   <span>Facebook</span>
+  </a>
+  <a href="https://www.instagram.com/10uilton" target="_blank" class="mSocBtn mSocIg">
+   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg>
+   <span>Instagram</span>
+  </a>
+  <a href="https://www.x.com/10uilton" target="_blank" class="mSocBtn mSocX">
+   <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+   <span>X / Twitter</span>
+  </a>
+ </div>
+ <div class="mFooter">Desenvolvido por <span>10uilton</span></div>
+</div>
+</div>
+
+<!-- ===== MENU DESCRIÇÃO ===== -->
+<div id="menuDesc">
+ <div id="descBg">
+  <canvas id="descCanvas"></canvas>
+ </div>
+ <div id="descContent">
+  <div class="dHeader">
+   <div class="dTitleWrap">
+    <div class="dLabel">SOBRE O JOGO</div>
+    <div class="dTitle">ROLÊ NA QUEBRADA</div>
+   </div>
+  </div>
+  <div class="dDivider"></div>
+
+  <!-- Arte do opala top-down animada -->
+  <div class="dCarCard">
+   <canvas id="descCarCanvas" width="260" height="130"></canvas>
+   <div class="dCarLabel">OPALA SS · PAREDÃO LIGADO</div>
+  </div>
+
+  <!-- Blocos de feature -->
+  <div class="dFeatures">
+   <div class="dFeat">
+    <div class="dFeatIcon">🚗</div>
+    <div class="dFeatText">
+     <div class="dFeatTitle">PILOTA O OPALA SS</div>
+     <div class="dFeatDesc">Jogo de direção em visão aérea desviando do trânsito numa avenida de duas faixas.</div>
+    </div>
+   </div>
+   <div class="dFeat">
+    <div class="dFeatIcon">📻</div>
+    <div class="dFeatText">
+     <div class="dFeatTitle">PAREDÃO + RÁDIO 10UILTON</div>
+     <div class="dFeatDesc">Ligar o rádio anima o rolê — mas atrai a polícia, que te adverte e multa R$300 por vez. Sem grana, o carro é apreendido.</div>
+    </div>
+   </div>
+   <div class="dFeat">
+    <div class="dFeatIcon">💥</div>
+    <div class="dFeatText">
+     <div class="dFeatTitle">BATIDAS & CONSERTO</div>
+     <div class="dFeatDesc">Bater demais manda o carro pro conserto (R$500). Sem dinheiro pra pagar, vai pro depósito — game over.</div>
+    </div>
+   </div>
+   <div class="dFeat">
+    <div class="dFeatIcon">🌧️</div>
+    <div class="dFeatText">
+     <div class="dFeatTitle">CLIMA DINÂMICO</div>
+     <div class="dFeatDesc">Ciclo de dia e noite, chuva, temporal e relâmpago fazem cada rolê ser diferente.</div>
+    </div>
+   </div>
+   <div class="dFeat">
+    <div class="dFeatIcon">⛽</div>
+    <div class="dFeatText">
+     <div class="dFeatTitle">SOBREVIVA NA PISTA</div>
+     <div class="dFeatDesc">Colete combustível e dinheiro na pista pra se manter no rolê.</div>
+    </div>
+   </div>
+  </div>
+
+  <div class="dMade">Feito em <span>HTML</span> por <span>10uilton</span></div>
+  <button class="dBackBtn" onclick="closeDesc()">← VOLTAR AO MENU</button>
+ </div>
+</div>
+
+<script>
+function openDesc(){
+  document.getElementById('menuDesc').style.display='flex';
+  initDescScene();
+}
+function closeDesc(){
+  document.getElementById('menuDesc').style.display='none';
+}
+
+// ── CENA DE FUNDO DO MENU DESCRIÇÃO ───────────────────────────────────
+let descRunning=false;
+function initDescScene(){
+  if(descRunning)return;
+  descRunning=true;
+  const dc=document.getElementById('descCanvas');
+  const dctx=dc.getContext('2d');
+  function resizeDesc(){dc.width=dc.offsetWidth||400;dc.height=dc.offsetHeight||700;}
+  resizeDesc();
+
+  // estrelas
+  const dStars=Array.from({length:120},()=>({
+    x:Math.random()*400,y:Math.random()*300,
+    r:Math.random()*1.3+0.2,
+    a:0.3+Math.random()*0.7,
+    t:Math.random()*Math.PI*2,
+    speed:0.008+Math.random()*0.025
+  }));
+
+  // prédios de fundo
+  const dBuildings=[];
+  const dcols=['#080d18','#070c15','#090e1a','#06090f','#0a0f1c'];
+  for(let i=0;i<22;i++){
+    const bw=18+Math.random()*38;
+    const bh=50+Math.random()*220;
+    dBuildings.push({
+      x:(i/22)*420-10,w:bw,h:bh,
+      col:dcols[i%dcols.length],
+      wins:Array.from({length:40},()=>Math.random()<0.35)
+    });
+  }
+
+  // partículas de luz subindo (efeito noite neon)
+  const particles=Array.from({length:30},()=>({
+    x:Math.random()*400,y:400+Math.random()*300,
+    vy:-(0.3+Math.random()*0.8),
+    alpha:0.1+Math.random()*0.4,
+    r:1+Math.random()*2,
+    col:['#ff6600','#ff3300','#cc0066','#6600cc','#0066ff'][Math.floor(Math.random()*5)]
+  }));
+
+  // carro top-down animado no fundo
+  let roadScroll=0;
+
+  function drawDescBg(){
+    if(document.getElementById('menuDesc').style.display==='none'){descRunning=false;return;}
+    const w=dc.width,h=dc.height;
+    dctx.clearRect(0,0,w,h);
+
+    // céu gradiente noturno
+    const skyGrad=dctx.createLinearGradient(0,0,0,h*0.6);
+    skyGrad.addColorStop(0,'#02020a');
+    skyGrad.addColorStop(1,'#0a0520');
+    dctx.fillStyle=skyGrad;
+    dctx.fillRect(0,0,w,h);
+
+    // glows de cor neon no fundo
+    [[0.15,0.2,'#6600cc',0.22],[0.75,0.15,'#cc0033',0.18],[0.5,0.4,'#003388',0.15]].forEach(([fx,fy,col,op])=>{
+      const rg=dctx.createRadialGradient(w*fx,h*fy,0,w*fx,h*fy,160);
+      rg.addColorStop(0,col.replace(')',`,${op})`).replace('rgb','rgba').replace('#','rgba(').replace(/([0-9a-f]{2})/gi,m=>parseInt(m,16)+','));
+      // fallback simples
+      dctx.save();dctx.globalAlpha=op;
+      dctx.fillStyle=col;
+      dctx.beginPath();dctx.arc(w*fx,h*fy,140,0,Math.PI*2);dctx.fill();
+      dctx.restore();
+    });
+    // blur via repeated fill
+    dctx.save();dctx.filter='blur(50px)';
+    [{x:0.15,y:0.2,c:'#5500aa',o:0.3},{x:0.78,y:0.12,c:'#aa0022',o:0.25},{x:0.5,y:0.38,c:'#002299',o:0.2}].forEach(g=>{
+      dctx.globalAlpha=g.o;dctx.fillStyle=g.c;
+      dctx.beginPath();dctx.arc(w*g.x,h*g.y,100,0,Math.PI*2);dctx.fill();
+    });
+    dctx.filter='none';dctx.restore();
+
+    // estrelas
+    dStars.forEach(s=>{
+      s.t+=s.speed;
+      const alpha=s.a*(0.5+0.5*Math.sin(s.t));
+      dctx.beginPath();dctx.arc(s.x%w,s.y%(h*0.55),s.r,0,Math.PI*2);
+      dctx.fillStyle=`rgba(255,255,255,${alpha})`;dctx.fill();
+    });
+
+    // prédios
+    const bh2=h*0.52;
+    dBuildings.forEach((b,bi)=>{
+      const by=h-bh2*(b.h/270);
+      const bH=bh2*(b.h/270);
+      dctx.fillStyle=b.col;
+      dctx.fillRect(b.x,by,b.w,bH);
+      let wi=0;
+      for(let wy=by+5;wy<h-3;wy+=13){
+        for(let wx=b.x+3;wx<b.x+b.w-5;wx+=9){
+          if(b.wins[wi%b.wins.length]){
+            const flicker=Math.sin(Date.now()*0.001*(bi+1)+wi*0.3);
+            dctx.fillStyle=`rgba(255,200,80,${0.3+0.25*flicker})`;
+            dctx.fillRect(wx,wy,4,4);
+          }
+          wi++;
+        }
+      }
+    });
+
+    // gradiente que escurece base
+    const grd=dctx.createLinearGradient(0,h*0.42,0,h);
+    grd.addColorStop(0,'rgba(6,6,16,0)');grd.addColorStop(1,'rgba(6,6,16,1)');
+    dctx.fillStyle=grd;dctx.fillRect(0,h*0.42,w,h*0.58);
+
+    // pista noturna simples no rodapé
+    roadScroll=(roadScroll+1.2)%40;
+    const roadY=h*0.7;
+    dctx.fillStyle='rgba(20,20,30,0.6)';dctx.fillRect(0,roadY,w,h-roadY);
+    // faixas
+    for(let y=roadY;y<h+40;y+=40){
+      const yy=(y+roadScroll)%h-20;
+      dctx.fillStyle='rgba(180,150,0,0.18)';dctx.fillRect(w*0.48,yy,6,22);
+      dctx.fillStyle='rgba(230,200,0,0.5)';dctx.fillRect(w*0.485,yy+1,4,18);
+    }
+    // luz de poste na pista
+    dctx.save();dctx.globalAlpha=0.07;dctx.fillStyle='#ffe066';
+    dctx.beginPath();dctx.ellipse(w*0.25,roadY+20,50,25,0,0,Math.PI*2);dctx.fill();
+    dctx.beginPath();dctx.ellipse(w*0.75,roadY+20,50,25,0,0,Math.PI*2);dctx.fill();
+    dctx.restore();
+
+    // partículas neon subindo
+    particles.forEach(p=>{
+      p.y+=p.vy;
+      if(p.y<roadY-20){p.y=h;p.alpha=0.1+Math.random()*0.3;}
+      dctx.beginPath();dctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      dctx.fillStyle=p.col;dctx.globalAlpha=p.alpha;dctx.fill();
+      dctx.globalAlpha=1;
+    });
+
+    requestAnimationFrame(drawDescBg);
+  }
+  drawDescBg();
+
+  // ── OPALA TOP-DOWN NO CARD ─────────────────────────────────────────────
+  const cc=document.getElementById('descCarCanvas');
+  const cctx=cc.getContext('2d');
+  let carPulse=0;
+  function drawDescCar(){
+    if(document.getElementById('menuDesc').style.display==='none')return;
+    const W=cc.width,H=cc.height;
+    cctx.clearRect(0,0,W,H);
+
+    // pista de fundo do card
+    cctx.fillStyle='rgba(20,20,30,0.5)';
+    cctx.fillRect(0,0,W,H);
+    // faixa central
+    const t=Date.now();
+    for(let y=-30;y<H+30;y+=36){
+      const yy=((y+(t*0.04))%H+H)%H-18;
+      cctx.fillStyle='rgba(230,200,0,0.35)';
+      cctx.fillRect(W/2-3,yy,5,20);
+    }
+
+    // paredão pulsando (speaker)
+    const pulse=(Math.sin(t/110)+1)*3;
+
+    // posição do carro
+    const cx=W/2, cy=H/2+5;
+    const hw=14,hh=26;
+
+    cctx.save();
+    // halo neon do paredão
+    cctx.shadowColor='#ff3300';cctx.shadowBlur=18+pulse*2;
+    cctx.globalAlpha=0.25+pulse*0.03;
+    cctx.fillStyle='#ff3300';
+    cctx.beginPath();cctx.ellipse(cx,cy+hh-8,20+pulse,10+pulse*0.5,0,0,Math.PI*2);cctx.fill();
+    cctx.globalAlpha=1;cctx.shadowBlur=0;cctx.restore();
+
+    cctx.save();
+    // pneus
+    cctx.fillStyle='#111';
+    [[cx-hw-5,cy-hh+6,5,9],[cx+hw,cy-hh+6,5,9],[cx-hw-5,cy+hh-15,5,9],[cx+hw,cy+hh-15,5,9]].forEach(([x,y,w2,h2])=>cctx.fillRect(x,y,w2,h2));
+    cctx.fillStyle='#555';
+    [[cx-hw-4,cy-hh+8,3,5],[cx+hw+1,cy-hh+8,3,5],[cx-hw-4,cy+hh-13,3,5],[cx+hw+1,cy+hh-13,3,5]].forEach(([x,y,w2,h2])=>cctx.fillRect(x,y,w2,h2));
+    // carroceria
+    cctx.fillStyle='#f0ede8';cctx.fillRect(cx-hw,cy-hh,hw*2,hh*2);
+    cctx.strokeStyle='#c5c2bc';cctx.lineWidth=0.8;cctx.strokeRect(cx-hw,cy-hh,hw*2,hh*2);
+    // capô
+    cctx.fillStyle='#e2dfd9';cctx.fillRect(cx-hw,cy-hh,hw*2,15);
+    // faróis
+    cctx.fillStyle='#fffbe0';cctx.fillRect(cx-hw,cy-hh,5,3);cctx.fillRect(cx+hw-5,cy-hh,5,3);
+    cctx.fillStyle='#ffe066';cctx.fillRect(cx-hw,cy-hh,3,2);cctx.fillRect(cx+hw-3,cy-hh,3,2);
+    // grade
+    cctx.fillStyle='#aaa';cctx.fillRect(cx-hw+6,cy-hh,hw*2-12,2);
+    // parabrisa
+    cctx.fillStyle='rgba(130,205,238,0.82)';cctx.fillRect(cx-hw+3,cy-hh+15,hw*2-6,9);
+    // teto
+    cctx.fillStyle='#d0cdc8';cctx.fillRect(cx-hw+3,cy-hh+24,hw*2-6,16);
+    // vidro traseiro
+    cctx.fillStyle='rgba(120,195,228,0.70)';cctx.fillRect(cx-hw+3,cy-hh+40,hw*2-6,7);
+    // faixa SS
+    cctx.fillStyle='#cc0000';cctx.fillRect(cx-hw,cy-4,2,10);cctx.fillRect(cx+hw-2,cy-4,2,10);
+    // espelhos
+    cctx.fillStyle='#bbb';cctx.fillRect(cx-hw-3,cy-hh+17,3,5);cctx.fillRect(cx+hw,cy-hh+17,3,5);
+    // porta-malas
+    cctx.fillStyle='#dedad3';cctx.fillRect(cx-hw,cy+hh-9,hw*2,9);
+    // lanternas
+    cctx.fillStyle='#cc0000';cctx.fillRect(cx-hw,cy+hh-4,7,4);cctx.fillRect(cx+hw-7,cy+hh-4,7,4);
+    cctx.fillStyle='#ff3300';cctx.fillRect(cx-hw,cy+hh-4,4,2);cctx.fillRect(cx+hw-4,cy+hh-4,4,2);
+    // para-choque
+    cctx.fillStyle='#bbb';cctx.fillRect(cx-hw,cy+hh,hw*2,2);
+    // paredão
+    const pr=3.5+pulse*0.35;
+    cctx.fillStyle='#111';cctx.fillRect(cx-hw+2,cy+hh-14,hw*2-4,10);
+    cctx.fillStyle='#1a1a1a';cctx.fillRect(cx-hw+3,cy+hh-13,hw*2-6,8);
+    cctx.fillStyle='#cc0000';cctx.fillRect(cx-4,cy+hh-12,8,6);
+    cctx.fillStyle='#fff';cctx.font='bold 5px Arial';cctx.textAlign='center';
+    cctx.fillText('SS',cx,cy+hh-7);cctx.textAlign='left';
+    // falantes pulsando
+    [cx-8,cx+8].forEach(sx=>{
+      cctx.fillStyle='#000';cctx.beginPath();cctx.arc(sx,cy+hh-9,pr,0,Math.PI*2);cctx.fill();
+      cctx.fillStyle='#3a3a3a';cctx.beginPath();cctx.arc(sx,cy+hh-9,pr*0.55,0,Math.PI*2);cctx.fill();
+      cctx.fillStyle='#666';cctx.beginPath();cctx.arc(sx,cy+hh-9,pr*0.28,0,Math.PI*2);cctx.fill();
+    });
+    cctx.restore();
+
+    // onda sonora saindo do paredão
+    for(let w3=1;w3<=3;w3++){
+      const wAlpha=Math.max(0,(0.5-w3*0.12)*(0.5+0.5*Math.sin(t/120+w3)));
+      cctx.save();
+      cctx.globalAlpha=wAlpha;
+      cctx.strokeStyle='#ff6600';cctx.lineWidth=1.2;
+      cctx.beginPath();cctx.arc(cx,cy+hh-8,12+w3*7+pulse*0.5,Math.PI*0.1,Math.PI*0.9);cctx.stroke();
+      cctx.restore();
+    }
+
+    requestAnimationFrame(drawDescCar);
+  }
+  drawDescCar();
+}
+</script>
+
+<script>
+(function(){
+ // ── FUNDO: prédios + estrelas ──────────────────────────────────────────
+ const mc=document.getElementById('menuCanvas');
+ if(!mc)return;
+ const mcx=mc.getContext('2d');
+ function resizeMenu(){mc.width=mc.offsetWidth||400;mc.height=mc.offsetHeight||600;}
+ resizeMenu();
+ const buildings=[];
+ function initBuildings(){
+  buildings.length=0;
+  const w=mc.width;
+  const cols=['#0d1a2e','#0a1520','#111827','#0e1e35','#0c1a2a','#12202f'];
+  for(let i=0;i<18;i++){
+   const bw=20+Math.random()*40;
+   const bh=60+Math.random()*200;
+   buildings.push({x:(i/18)*w,w:bw,h:bh,col:cols[Math.floor(Math.random()*cols.length)],
+    wins:Array.from({length:Math.floor(bw/10)*Math.floor(bh/14)+10},()=>Math.random()<0.45)
+   });
+  }
+ }
+ initBuildings();
+ const stars=Array.from({length:80},()=>({x:Math.random()*400,y:Math.random()*400,r:Math.random()*1.2+0.3,a:0.4+Math.random()*0.6,t:Math.random()*Math.PI*2}));
+ function drawMenu(){
+  if(!document.getElementById('menu')||document.getElementById('menu').style.display==='none')return;
+  const w=mc.width,h=mc.height;
+  mcx.clearRect(0,0,w,h);
+  stars.forEach(s=>{
+   s.t+=0.02;
+   const alpha=s.a*(0.7+0.3*Math.sin(s.t));
+   mcx.beginPath();mcx.arc(s.x%w,s.y%(h*0.6),s.r,0,Math.PI*2);
+   mcx.fillStyle='rgba(255,255,255,'+alpha+')';mcx.fill();
+  });
+  const bh2=h*0.55;
+  buildings.forEach(b=>{
+   const by=h-bh2*(b.h/260);
+   const bH=bh2*(b.h/260);
+   mcx.fillStyle=b.col;
+   mcx.fillRect(b.x,by,b.w,bH);
+   let wi=0;
+   for(let wy=by+6;wy<h-4;wy+=14){
+    for(let wx=b.x+4;wx<b.x+b.w-6;wx+=10){
+     if(b.wins[wi]){mcx.fillStyle='rgba(255,200,80,0.55)';mcx.fillRect(wx,wy,5,5);}
+     wi++;if(wi>=b.wins.length)wi=0;
+    }
+   }
+  });
+  const grad=mcx.createLinearGradient(0,h*0.45,0,h);
+  grad.addColorStop(0,'rgba(10,10,20,0)');grad.addColorStop(1,'rgba(10,10,20,1)');
+  mcx.fillStyle=grad;mcx.fillRect(0,h*0.45,w,h*0.55);
+  requestAnimationFrame(drawMenu);
+ }
+ drawMenu();
+
+ // ── RODA GIRANDO (substitui o "O" de ROLÊ) ────────────────────────────
+ const wc=document.getElementById('wheelCanvas');
+ const wx2=wc.getContext('2d');
+ // tamanho da roda = altura do texto R
+ const rTxt=document.getElementById('mTxtR');
+ function sizeWheel(){
+  const fs=parseFloat(getComputedStyle(rTxt).fontSize)||90;
+  const sz=Math.round(fs*0.88);
+  wc.width=sz; wc.height=sz;
+  wc.style.width=sz+'px'; wc.style.height=sz+'px';
+ }
+ sizeWheel();
+ window.addEventListener('resize',sizeWheel);
+
+ let wheelAngle=0;
+ function drawWheel(){
+  if(!document.getElementById('menu')||document.getElementById('menu').style.display==='none')return;
+  const sz=wc.width;
+  const cx2=sz/2, cy2=sz/2;
+  const R=sz/2-2;       // raio externo pneu
+  const Rinner=R*0.72;  // aro interno
+  const Rhub=R*0.22;    // cubo central
+
+  wx2.clearRect(0,0,sz,sz);
+  wx2.save();
+  wx2.translate(cx2,cy2);
+  wx2.rotate(wheelAngle);
+
+  // ── pneu (borracha escura com textura de parede lateral) ──
+  wx2.beginPath();wx2.arc(0,0,R,0,Math.PI*2);
+  wx2.fillStyle='#1a1a1a';wx2.fill();
+
+  // detalhe da parede lateral (anel cinza)
+  wx2.beginPath();wx2.arc(0,0,R,0,Math.PI*2);
+  wx2.strokeStyle='#333';wx2.lineWidth=R*0.12;wx2.stroke();
+
+  // linha branca de ombro (realismo de pneu)
+  wx2.beginPath();wx2.arc(0,0,R*0.92,0,Math.PI*2);
+  wx2.strokeStyle='rgba(255,255,255,0.08)';wx2.lineWidth=R*0.04;wx2.stroke();
+
+  // ── aro (alumínio polido) ──
+  wx2.beginPath();wx2.arc(0,0,Rinner,0,Math.PI*2);
+  const aGrad=wx2.createRadialGradient(0,0,Rhub,0,0,Rinner);
+  aGrad.addColorStop(0,'#d0d0d0');
+  aGrad.addColorStop(0.5,'#888');
+  aGrad.addColorStop(1,'#555');
+  wx2.fillStyle=aGrad;wx2.fill();
+
+  // ── raios (5 raios estilo esportivo) ──
+  const nSpokes=5;
+  wx2.lineWidth=R*0.09;
+  wx2.lineCap='round';
+  for(let i=0;i<nSpokes;i++){
+   const ang=(i/nSpokes)*Math.PI*2;
+   const spokeGrad=wx2.createLinearGradient(
+    Math.cos(ang)*Rhub,Math.sin(ang)*Rhub,
+    Math.cos(ang)*Rinner*0.9,Math.sin(ang)*Rinner*0.9
+   );
+   spokeGrad.addColorStop(0,'#ccc');
+   spokeGrad.addColorStop(1,'#666');
+   wx2.strokeStyle=spokeGrad;
+   wx2.beginPath();
+   wx2.moveTo(Math.cos(ang)*Rhub,Math.sin(ang)*Rhub);
+   wx2.lineTo(Math.cos(ang)*Rinner*0.88,Math.sin(ang)*Rinner*0.88);
+   wx2.stroke();
+  }
+
+  // ── cubo central ──
+  const hubGrad=wx2.createRadialGradient(-Rhub*0.3,-Rhub*0.3,0,0,0,Rhub);
+  hubGrad.addColorStop(0,'#fff');
+  hubGrad.addColorStop(0.4,'#bbb');
+  hubGrad.addColorStop(1,'#555');
+  wx2.beginPath();wx2.arc(0,0,Rhub,0,Math.PI*2);
+  wx2.fillStyle=hubGrad;wx2.fill();
+  wx2.strokeStyle='#333';wx2.lineWidth=1;wx2.stroke();
+
+  // ponto central
+  wx2.beginPath();wx2.arc(0,0,Rhub*0.25,0,Math.PI*2);
+  wx2.fillStyle='#222';wx2.fill();
+
+  wx2.restore();
+
+  // sombra suave abaixo da roda
+  wx2.save();
+  wx2.globalAlpha=0.18;
+  wx2.beginPath();wx2.ellipse(cx2,sz-2,R*0.6,R*0.12,0,0,Math.PI*2);
+  wx2.fillStyle='#000';wx2.fill();
+  wx2.restore();
+
+  wheelAngle+=0.045; // velocidade de rotação
+  requestAnimationFrame(drawWheel);
+ }
+ drawWheel();
+
+ // ── OPALA SS BRANCO — VISTA LATERAL (3/4 estilo rua) ─────────────────
+ const oc=document.getElementById('opalaCanvas');
+ const ox2=oc.getContext('2d');
+
+ // tamanho do Opala: ~130x65px
+ const OW=130, OH=68;
+ oc.width=OW; oc.height=OH;
+ oc.style.width=OW+'px'; oc.style.height=OH+'px';
+
+ let opalaBounce=0;    // suspensão leve
+ let opalaBounceT=0;
+ let headlightOn=true;
+ let headlightTimer=0;
+ let headlightInterval=0;
+ let speakerPulse=0;
+
+ // pisca faróis: acende/apaga de forma irregular
+ function scheduleHeadlight(){
+  // intervalo entre 800ms e 2500ms
+  headlightInterval=800+Math.random()*1700;
+ }
+ scheduleHeadlight();
+
+ function drawOpala(){
+  if(!document.getElementById('menu')||document.getElementById('menu').style.display==='none')return;
+
+  headlightTimer+=16;
+  if(headlightTimer>=headlightInterval){
+   headlightOn=!headlightOn;
+   headlightTimer=0;
+   if(headlightOn) scheduleHeadlight();
+   else headlightInterval=80+Math.random()*120; // apagado por pouco tempo
+  }
+
+  // bounce (suspensão suave, como carro parado com paredão tocando)
+  opalaBounceT+=0.07;
+  opalaBounce=Math.sin(opalaBounceT)*1.2+Math.sin(opalaBounceT*2.3)*0.5;
+
+  // pulse do paredão (falante)
+  speakerPulse=Math.sin(opalaBounceT*3.1)*0.5+0.5;
+
+  ox2.clearRect(0,0,OW,OH);
+
+  const by=42+opalaBounce; // base do carro (linha do chão)
+  const carH=28;    // altura do carro do chão ao teto
+  const carW=118;   // comprimento
+  const cx3=6;      // x inicial (esquerda do carro)
+
+  // ── sombra no chão ──
+  ox2.save();
+  ox2.globalAlpha=0.22;
+  ox2.fillStyle='#000';
+  ox2.beginPath();ox2.ellipse(cx3+carW/2,by+4,carW*0.44,5,0,0,Math.PI*2);ox2.fill();
+  ox2.restore();
+
+  // ── carroceria principal (branco) ──
+  ox2.save();
+  // shape do carro: frente arredondada, traseira quase reta
+  ox2.beginPath();
+  ox2.moveTo(cx3+10, by);              // frente baixo
+  ox2.lineTo(cx3+carW-4, by);         // traseira baixo
+  ox2.lineTo(cx3+carW, by-8);         // traseira sobe levemente
+  ox2.lineTo(cx3+carW, by-carH+8);    // traseira topo
+  ox2.lineTo(cx3+carW-10, by-carH);   // topo traseiro
+  ox2.lineTo(cx3+34, by-carH);        // topo linha reta
+  ox2.lineTo(cx3+18, by-carH+6);      // quebra do capô
+  ox2.lineTo(cx3+8, by-carH+10);      // capô frontal
+  ox2.lineTo(cx3+2, by-8);            // frente curva
+  ox2.closePath();
+
+  const bodyGrad=ox2.createLinearGradient(cx3,by-carH,cx3,by);
+  bodyGrad.addColorStop(0,'#e8e4de');
+  bodyGrad.addColorStop(0.4,'#f5f2ec');
+  bodyGrad.addColorStop(0.8,'#dedad3');
+  bodyGrad.addColorStop(1,'#c8c4bc');
+  ox2.fillStyle=bodyGrad;ox2.fill();
+  ox2.strokeStyle='#aaa';ox2.lineWidth=0.8;ox2.stroke();
+  ox2.restore();
+
+  // ── linha SS vermelha (faixa lateral) ──
+  ox2.save();
+  ox2.fillStyle='#cc0000';
+  ox2.fillRect(cx3+14,by-14,carW-20,4);
+  ox2.restore();
+
+  // ── vidros (parabrisa + janela traseira) ──
+  ox2.save();
+  // parabrisa
+  ox2.beginPath();
+  ox2.moveTo(cx3+18,by-carH+6);
+  ox2.lineTo(cx3+34,by-carH+1);
+  ox2.lineTo(cx3+44,by-carH+12);
+  ox2.lineTo(cx3+26,by-carH+12);
+  ox2.closePath();
+  ox2.fillStyle='rgba(130,205,238,0.78)';ox2.fill();
+  ox2.strokeStyle='rgba(180,230,255,0.5)';ox2.lineWidth=0.5;ox2.stroke();
+  // janela lateral
+  ox2.beginPath();
+  ox2.moveTo(cx3+46,by-carH+1);
+  ox2.lineTo(cx3+84,by-carH+1);
+  ox2.lineTo(cx3+84,by-carH+13);
+  ox2.lineTo(cx3+46,by-carH+13);
+  ox2.closePath();
+  ox2.fillStyle='rgba(120,195,228,0.70)';ox2.fill();
+  ox2.stroke();
+  // vidro traseiro
+  ox2.beginPath();
+  ox2.moveTo(cx3+86,by-carH+2);
+  ox2.lineTo(cx3+carW-8,by-carH+6);
+  ox2.lineTo(cx3+carW-8,by-carH+14);
+  ox2.lineTo(cx3+86,by-carH+13);
+  ox2.closePath();
+  ox2.fillStyle='rgba(110,185,220,0.65)';ox2.fill();
+  ox2.stroke();
+  ox2.restore();
+
+  // ── coluna B (pilar entre janelas) ──
+  ox2.fillStyle='#bbb';
+  ox2.fillRect(cx3+83,by-carH+1,4,12);
+
+  // ── faróis dianteiros ──
+  if(headlightOn){
+   // glow ao redor do farol (pequeno, sutil)
+   ox2.save();
+   ox2.globalAlpha=0.55;
+   const hGlow=ox2.createRadialGradient(cx3+4,by-8,0,cx3+4,by-8,14);
+   hGlow.addColorStop(0,'rgba(255,240,180,0.9)');
+   hGlow.addColorStop(0.5,'rgba(255,200,80,0.3)');
+   hGlow.addColorStop(1,'rgba(255,180,0,0)');
+   ox2.fillStyle=hGlow;
+   ox2.beginPath();ox2.arc(cx3+4,by-8,14,0,Math.PI*2);ox2.fill();
+   ox2.restore();
+  }
+  // lente do farol
+  ox2.save();
+  ox2.fillStyle=headlightOn?'#fffbe0':'#ccc8a0';
+  ox2.beginPath();ox2.ellipse(cx3+4,by-10,4,5,0,0,Math.PI*2);ox2.fill();
+  ox2.strokeStyle='#aaa';ox2.lineWidth=0.5;ox2.stroke();
+  // farol inferior
+  ox2.fillStyle=headlightOn?'#ffe080':'#bbb';
+  ox2.beginPath();ox2.ellipse(cx3+5,by-4,3,4,0,0,Math.PI*2);ox2.fill();
+  ox2.restore();
+
+  // ── lanternas traseiras ──
+  ox2.save();
+  ox2.fillStyle='#cc0000';
+  ox2.fillRect(cx3+carW-3,by-14,3,10);
+  ox2.fillStyle='#ff2200';
+  ox2.fillRect(cx3+carW-2,by-13,2,4);
+  ox2.restore();
+
+  // ── paredão na traseira (caixa de som) ──
+  const spkX=cx3+carW-22, spkY=by-12, spkW=18, spkH=10;
+  ox2.fillStyle='#111';ox2.fillRect(spkX,spkY,spkW,spkH);
+  ox2.strokeStyle='#333';ox2.lineWidth=0.5;ox2.strokeRect(spkX,spkY,spkW,spkH);
+  // dois falantes pulsando
+  const pr2=2.8+(speakerPulse*1.0);
+  [spkX+5,spkX+13].forEach(sx=>{
+   ox2.fillStyle='#000';
+   ox2.beginPath();ox2.arc(sx,spkY+5,pr2,0,Math.PI*2);ox2.fill();
+   ox2.fillStyle='#2a2a2a';
+   ox2.beginPath();ox2.arc(sx,spkY+5,pr2*0.6,0,Math.PI*2);ox2.fill();
+   ox2.fillStyle='#555';
+   ox2.beginPath();ox2.arc(sx,spkY+5,pr2*0.28,0,Math.PI*2);ox2.fill();
+  });
+  // SS no paredão
+  ox2.fillStyle='#cc0000';ox2.fillRect(spkX+6,spkY+1,6,3);
+  ox2.fillStyle='#fff';ox2.font='bold 3px Arial';ox2.textAlign='center';
+  ox2.fillText('SS',spkX+9,spkY+4);ox2.textAlign='left';
+
+  // ── rodas (frente e trás) ──
+  [[cx3+22,by+1],[cx3+carW-22,by+1]].forEach(([wx3,wy3])=>{
+   // pneu
+   ox2.beginPath();ox2.arc(wx3,wy3,11,0,Math.PI*2);
+   ox2.fillStyle='#1a1a1a';ox2.fill();
+   ox2.strokeStyle='#333';ox2.lineWidth=3;ox2.stroke();
+   // aro
+   ox2.beginPath();ox2.arc(wx3,wy3,7,0,Math.PI*2);
+   const wGrad=ox2.createRadialGradient(wx3-2,wy3-2,0,wx3,wy3,7);
+   wGrad.addColorStop(0,'#ddd');wGrad.addColorStop(1,'#666');
+   ox2.fillStyle=wGrad;ox2.fill();
+   // raios
+   for(let i=0;i<5;i++){
+    const a2=(i/5)*Math.PI*2+opalaBounceT*0.6;
+    ox2.strokeStyle='#999';ox2.lineWidth=1.2;ox2.lineCap='round';
+    ox2.beginPath();
+    ox2.moveTo(wx3+Math.cos(a2)*2,wy3+Math.sin(a2)*2);
+    ox2.lineTo(wx3+Math.cos(a2)*6,wy3+Math.sin(a2)*6);
+    ox2.stroke();
+   }
+   // cubo
+   ox2.beginPath();ox2.arc(wx3,wy3,2.2,0,Math.PI*2);
+   ox2.fillStyle='#ccc';ox2.fill();
+  });
+
+  // ── espelhos ──
+  ox2.fillStyle='#bbb';
+  ox2.beginPath();ox2.moveTo(cx3+18,by-carH+8);ox2.lineTo(cx3+13,by-carH+11);ox2.lineTo(cx3+18,by-carH+13);ox2.closePath();ox2.fill();
+
+  requestAnimationFrame(drawOpala);
+ }
+ drawOpala();
+
+})();
+</script><div class="wrap">
+<div class="top">
+
+<div id="hud"></div>
+
+<div class="topBtns">
+<button id="startBtn">▶️ Start</button>
+<div class="radioStatus">
+ <div class="ledRow"><span class="led" id="radioLed"></span><span>📻 Rádio 10uilton</span></div>
+ <div class="statusTxt" id="radioStatusTxt">Desligada</div>
+</div>
+<button id="menuBtn">🏠 Menu</button>
+</div>
+
+</div>
+
+<audio id="radio" loop>
+<source src="https://usa3.fastcast4u.com/proxy/radio10uilton?mp=/1" type="audio/mpeg">
+</audio>
+
+<canvas id="cv" width="400" height="600"></canvas>
+
+<div class="controls">
+<button class="ctrl" id="radioToggleBtn">📻</button>
+<button class="ctrl" id="left">⬅️</button>
+<button class="ctrl" id="move">🕹️</button>
+<button class="ctrl" id="right">➡️</button>
+<button class="ctrl" id="hornBtn">📢</button>
+</div>
+
+<script>
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const radio=document.getElementById('radio');
+const hud=document.getElementById('hud');
+
+// === BUZINA (som sintetizado via Web Audio API, sem precisar de arquivo) ===
+let audioCtx=null;
+function getAudioCtx(){
+ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ if(audioCtx.state==='suspended') audioCtx.resume();
+ return audioCtx;
+}
+function playHonk(durationMs){
+ try{
+   const ac=getAudioCtx();
+   const dur=(durationMs||280)/1000;
+   const now=ac.currentTime;
+
+   const gain=ac.createGain();
+   gain.gain.setValueAtTime(0,now);
+   gain.gain.linearRampToValueAtTime(0.22,now+0.02);
+   gain.gain.linearRampToValueAtTime(0.18,now+dur*0.7);
+   gain.gain.linearRampToValueAtTime(0,now+dur);
+   gain.connect(ac.destination);
+
+   // dois osciladores levemente dessintonizados = timbre de buzina de carro popular
+   const f1=ac.createOscillator(); f1.type='sawtooth'; f1.frequency.value=330;
+   const f2=ac.createOscillator(); f2.type='square'; f2.frequency.value=415;
+   f1.connect(gain); f2.connect(gain);
+   f1.start(now); f2.start(now);
+   f1.stop(now+dur); f2.stop(now+dur);
+ }catch(e){ /* AudioContext indisponível, ignora silenciosamente */ }
+}
+
+// === SONS AMBIENTE DOS VEÍCULOS ===
+// Nós usamos nós osciladores contínuos por veículo, gerenciados num Map
+// Cada veículo na pista tem seu próprio nó de gain + oscilador
+const vehicleSoundNodes = new Map(); // key: referência do veículo, value: {gain, oscs, lfo}
+
+function getVehicleSoundConfig(tipo){
+  // retorna config de osciladores para cada tipo
+  // volume base bem baixo (max ~0.04) pra não competir com rádio/buzina
+  switch(tipo){
+    case 'car':
+      return {oscs:[{type:'sawtooth',freq:82},{type:'square',freq:86}], vol:0.028, lfoFreq:6, lfoDepth:0.008};
+    case 'moto':
+      return {oscs:[{type:'sawtooth',freq:160},{type:'square',freq:168}], vol:0.025, lfoFreq:10, lfoDepth:0.007};
+    case 'bus':
+      return {oscs:[{type:'sawtooth',freq:52},{type:'square',freq:55}], vol:0.032, lfoFreq:4, lfoDepth:0.009};
+    case 'truck':
+      return {oscs:[{type:'sawtooth',freq:38},{type:'square',freq:41}], vol:0.035, lfoFreq:3, lfoDepth:0.010};
+    case 'police':
+      // sirene: dois tons alternando (ré-mi)
+      return {oscs:[{type:'square',freq:740},{type:'square',freq:587}], vol:0.030, lfoFreq:0, siren:true, sirenRate:0.4};
+    case 'ambulance':
+      // sirene: dois tons alternando (sol-lá)
+      return {oscs:[{type:'square',freq:880},{type:'square',freq:698}], vol:0.030, lfoFreq:0, siren:true, sirenRate:0.35};
+    default:
+      return null;
+  }
+}
+
+function startVehicleSound(v){
+  if(vehicleSoundNodes.has(v)) return;
+  try{
+    const ac=getAudioCtx();
+    const cfg=getVehicleSoundConfig(v.t);
+    if(!cfg) return;
+
+    const masterGain=ac.createGain();
+    masterGain.gain.setValueAtTime(0, ac.currentTime);
+    masterGain.connect(ac.destination);
+
+    const oscs=[];
+    if(cfg.siren){
+      // sirene: oscilador único com frequência modulada por LFO de alta amplitude
+      const osc=ac.createOscillator();
+      osc.type=cfg.oscs[0].type;
+      osc.frequency.setValueAtTime(cfg.oscs[0].freq, ac.currentTime);
+      // LFO para alternar entre os dois tons da sirene
+      const lfo=ac.createOscillator();
+      lfo.type='square';
+      lfo.frequency.value=1/cfg.sirenRate;
+      const lfoGain=ac.createGain();
+      const freqDiff=(cfg.oscs[0].freq-cfg.oscs[1].freq)/2;
+      lfoGain.gain.value=freqDiff;
+      const freqBase=(cfg.oscs[0].freq+cfg.oscs[1].freq)/2;
+      osc.frequency.value=freqBase;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.start();
+      osc.connect(masterGain);
+      osc.start();
+      oscs.push(osc,lfo,lfoGain);
+      vehicleSoundNodes.set(v,{masterGain,oscs,siren:true});
+    } else {
+      // motor: dois osciladores + LFO suave pra simular flutuação do motor
+      const lfo=ac.createOscillator();
+      lfo.type='sine';
+      lfo.frequency.value=cfg.lfoFreq;
+      const lfoGain=ac.createGain();
+      lfoGain.gain.value=cfg.lfoDepth;
+      lfo.connect(lfoGain);
+      lfoGain.connect(masterGain.gain);
+      lfo.start();
+      oscs.push(lfo);
+      cfg.oscs.forEach(o=>{
+        const osc=ac.createOscillator();
+        osc.type=o.type;
+        osc.frequency.value=o.freq;
+        osc.connect(masterGain);
+        osc.start();
+        oscs.push(osc);
+      });
+      vehicleSoundNodes.set(v,{masterGain,oscs,siren:false});
+    }
+  }catch(e){}
+}
+
+function stopVehicleSound(v){
+  const node=vehicleSoundNodes.get(v);
+  if(!node) return;
+  try{
+    const ac=getAudioCtx();
+    node.masterGain.gain.setTargetAtTime(0, ac.currentTime, 0.1);
+    setTimeout(()=>{
+      try{ node.oscs.forEach(o=>{ try{o.stop();}catch(e){} }); node.masterGain.disconnect(); }catch(e){}
+    },300);
+  }catch(e){}
+  vehicleSoundNodes.delete(v);
+}
+
+function updateVehicleSounds(){
+  if(!started){
+    // pause: silencia tudo
+    vehicleSoundNodes.forEach((node,v)=>stopVehicleSound(v));
+    return;
+  }
+  try{
+    const ac=getAudioCtx();
+    const now=ac.currentTime;
+
+    // remove sons de veículos que saíram da pista
+    vehicleSoundNodes.forEach((node,v)=>{
+      if(!traffic.includes(v)) stopVehicleSound(v);
+    });
+
+    traffic.forEach(v=>{
+      // polícia: toca sirene sempre se perseguindo (rádio on), ou 50% das vezes se passando normal
+      if(v.t==='police'){
+        const perseguindo=!radio.paused;
+        const deveTocar=perseguindo || (v.policeHasSiren===true);
+        if(!vehicleSoundNodes.has(v)){
+          if(v.policeHasSiren===undefined){
+            v.policeHasSiren=perseguindo || Math.random()<0.5;
+          }
+          if(v.policeHasSiren) startVehicleSound(v);
+        }
+      } else {
+        // outros: inicia som se ainda não tem
+        if(!vehicleSoundNodes.has(v)) startVehicleSound(v);
+      }
+
+      const node=vehicleSoundNodes.get(v);
+      if(!node) return;
+
+      // volume baseado na proximidade do jogador (mais perto = um pouco mais audível)
+      const dist=Math.abs(v.y-497);
+      const proxFactor=Math.max(0, 1-dist/300); // 0 longe, 1 muito perto
+      const cfg=getVehicleSoundConfig(v.t);
+      if(!cfg) return;
+      const volAlvo=cfg.vol*(0.35 + proxFactor*0.65);
+      node.masterGain.gain.setTargetAtTime(volAlvo, now, 0.15);
+    });
+  }catch(e){}
+}
+
+// === SOM DO MOTOR DO JOGADOR (Opala SS) ===
+let playerEngineNode=null;
+
+function startPlayerEngine(){
+  if(playerEngineNode) return;
+  try{
+    const ac=getAudioCtx();
+    const now=ac.currentTime;
+
+    const masterGain=ac.createGain();
+    masterGain.gain.setValueAtTime(0,now);
+    masterGain.connect(ac.destination);
+
+    // V6 grave estilo muscle car anos 70: dois osciladores bem graves
+    const osc1=ac.createOscillator(); osc1.type='sawtooth'; osc1.frequency.value=68;
+    const osc2=ac.createOscillator(); osc2.type='sawtooth'; osc2.frequency.value=72;
+    // harmônico mais agudo pra dar textura
+    const osc3=ac.createOscillator(); osc3.type='square'; osc3.frequency.value=136;
+    const gainH=ac.createGain(); gainH.gain.value=0.3; // harmônico mais baixo
+    osc3.connect(gainH); gainH.connect(masterGain);
+
+    // LFO pra simular flutuação do motor em marcha
+    const lfo=ac.createOscillator(); lfo.type='sine'; lfo.frequency.value=7;
+    const lfoGain=ac.createGain(); lfoGain.gain.value=0.006;
+    lfo.connect(lfoGain); lfoGain.connect(masterGain.gain);
+
+    osc1.connect(masterGain); osc2.connect(masterGain);
+    osc1.start(); osc2.start(); osc3.start(); lfo.start();
+
+    // fade in suave
+    masterGain.gain.setTargetAtTime(0.038, now, 0.3);
+
+    playerEngineNode={masterGain,oscs:[osc1,osc2,osc3,lfo,gainH]};
+  }catch(e){}
+}
+
+function stopPlayerEngine(){
+  if(!playerEngineNode) return;
+  try{
+    const ac=getAudioCtx();
+    playerEngineNode.masterGain.gain.setTargetAtTime(0, ac.currentTime, 0.2);
+    setTimeout(()=>{
+      try{
+        playerEngineNode.oscs.forEach(o=>{ try{o.stop();}catch(e){} });
+        playerEngineNode.masterGain.disconnect();
+      }catch(e){}
+    },600);
+  }catch(e){}
+  playerEngineNode=null;
+}
+
+function updatePlayerEngine(){
+  if(started && moving && fuel>0){
+    startPlayerEngine();
+  } else {
+    stopPlayerEngine();
+  }
+}
+if(!ctx.roundRect){ctx.roundRect=function(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();};};
+
+let started=false,moving=false,fuel=100,lives=3,money=300; let gameMinutes=360;
+let policeParadaoCount=0; // quantas vezes a polícia já parou o jogador pelo paredão
+const SAVE_KEY='role_na_city_save_v1';
+
+// === SISTEMA DE TEMPERATURA REALISTA ===
+// Curva base de temperatura por hora (índice 0-23)
+const tempCurvaBase=[
+ 19,18,17,16,16,17, // 0h-5h: madrugada fria
+ 18,20,22,24,26,27, // 6h-11h: amanhecer aquecendo
+ 28,29,30,29,28,27, // 12h-17h: tarde quente
+ 26,25,24,22,21,20, // 18h-23h: noite esfriando
+];
+// Variação aleatória diária (muda a cada dia de jogo)
+let tempDayOffset=0;       // offset do dia: -1.5 a +1.5
+let tempDayNoise=[];       // ruído hora a hora pra variar dentro do dia
+let tempLastDay=-1;        // controla quando gerar novo ruído
+let tempCurrent=22;        // temperatura atual exibida
+let tempTarget=22;         // temperatura alvo (suavização)
+let tempLastUpdate=-1;     // última hora inteira que calculamos
+
+function tempGetDayOfGame(){
+ return Math.floor(gameMinutes/1440); // dias completos jogados
+}
+
+function tempInitDay(day){
+ if(day===tempLastDay) return;
+ tempLastDay=day;
+ // offset do dia: dá um caráter de "dia mais quente ou mais frio"
+ tempDayOffset=(Math.random()*3)-1.5;
+ // ruído hora a hora: variação suave entre horas (±1.5°C máx)
+ tempDayNoise=[];
+ for(let i=0;i<24;i++) tempDayNoise.push((Math.random()*3)-1.5);
+}
+
+function tempCalcTarget(hFrac){
+ const h=Math.floor(hFrac)%24;
+ const hNext=(h+1)%24;
+ const frac=hFrac-Math.floor(hFrac);
+ // interpola entre horas vizinhas
+ const base=tempCurvaBase[h]*(1-frac)+tempCurvaBase[hNext]*frac;
+ const noise=tempDayNoise[h]*(1-frac)+tempDayNoise[hNext]*frac;
+ return Math.round((base+tempDayOffset+noise)*10)/10;
+}
+
+function updateTemperature(){
+ const day=tempGetDayOfGame();
+ tempInitDay(day);
+ // hora fracionada dentro do dia (0.0 a 23.99)
+ const hFrac=(gameMinutes/60)%24;
+ tempTarget=tempCalcTarget(hFrac);
+ // suaviza a temperatura atual (não muda de choque)
+ tempCurrent+=(tempTarget-tempCurrent)*0.015;
+}
+// ============================================
+let px=160,target=160,scroll=0;
+let traffic=[],fuels=[],cashs=[]; let raining=false;
+
+// === QUEBRA-MOLA ===
+let playerBounce=0, playerBounceVel=0;
+const BUMP_CYCLE=1200;  // a cada 1200 unidades de scroll aparece 1 QM
+const BUMP_OFFSET=600;  // offset inicial
+
+// === CHUVA REALISTA ===
+let rainDrops=[];
+function initRain(){
+ rainDrops=[];
+ for(let i=0;i<110;i++){
+   rainDrops.push({
+     x:Math.random()*400,
+     y:Math.random()*600,
+     len:8+Math.random()*14,
+     speed:9+Math.random()*7,
+     drift:1.5+Math.random()*1.5,
+     alpha:0.25+Math.random()*0.35
+   });
+ }
+}
+initRain();
+
+// === RELÂMPAGO ===
+let lightning={active:false,flashAlpha:0,timer:0,boltSeed:0};
+
+// === ANIMAÇÃO DE BATIDA ===
+let crashAnim={active:false,x:0,y:0,timer:0,duration:22,shake:0};
+function maybeTriggerLightning(){
+ if(raining && Math.random()<0.15 && !lightning.active){
+   lightning.active=true;
+   lightning.flashAlpha=1;
+   lightning.timer=0;
+   lightning.boltSeed=Math.random()*400;
+ }
+}
+
+// === VENTO NAS ÁRVORES ===
+let windTime=0, windGust=0, windGustTarget=0;
+setInterval(()=>{ windGustTarget=(Math.random()*2-1); },5000);
+
+function saveGame(){localStorage.setItem(SAVE_KEY,JSON.stringify({fuel,lives,money,px,target,scroll,gameMinutes,policeParadaoCount}));}
+function continueGame(){let s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(!s)return;fuel=s.fuel;lives=s.lives;money=s.money;px=s.px;target=s.target;scroll=s.scroll;gameMinutes=s.gameMinutes;policeParadaoCount=s.policeParadaoCount||0;tempLastDay=-1;updateTemperature();tempCurrent=tempTarget;document.getElementById('menu').style.display='none';started=true;}
+function newGame(){localStorage.removeItem(SAVE_KEY);resetGame();tempLastDay=-1;updateTemperature();tempCurrent=tempTarget;document.getElementById('menu').style.display='none';started=true;}
+// ao carregar a página: mostra CONTINUAR só se há save
+if(localStorage.getItem(SAVE_KEY))document.getElementById('continueBtn').style.display='block';
+else document.getElementById('continueBtn').style.display='none';
+
+function resetGame(msg){
+ if(msg) alert(msg);
+
+ // reset geral
+ started=false;
+ moving=false;
+ fuel=100;
+ lives=3;
+ money=300;
+ px=160;
+ target=160;
+ scroll=0;
+
+ traffic=[];
+ fuels=[];
+ cashs=[];
+ policeParadaoCount=0;
+
+ // desligar rádio
+ radio.pause();
+ radio.currentTime=0;
+ updateRadioUI();
+ stopPlayerEngine();
+
+ // se veio de game over (msg), apaga save e esconde CONTINUAR
+ // se veio do botão menu (sem msg), mantém save e mostra CONTINUAR
+ if(msg){
+   localStorage.removeItem(SAVE_KEY);
+   document.getElementById('continueBtn').style.display='none';
+ } else {
+   if(localStorage.getItem(SAVE_KEY))
+     document.getElementById('continueBtn').style.display='block';
+ }
+
+ document.getElementById('menu').style.display='flex';
+ startBtn.textContent='START';
+}
+
+function updateRadioUI(){
+ const ligada=!radio.paused;
+ const led=document.getElementById('radioLed');
+ const statusTxt=document.getElementById('radioStatusTxt');
+ const radioToggleBtn=document.getElementById('radioToggleBtn');
+ led.classList.toggle('on',ligada);
+ statusTxt.textContent=ligada?'Ligada':'Desligada';
+ radioToggleBtn.classList.toggle('activeRadio',ligada);
+}
+
+radioToggleBtn.onclick=()=>{
+if(radio.paused){radio.play();}
+else{radio.pause();}
+updateRadioUI();
+};
+startBtn.onclick=()=>{
+started=!started;
+startBtn.textContent=started?'PAUSE':'START';
+};
+
+menuBtn.onclick=()=>{
+ if(started) saveGame();
+ resetGame();
+};
+move.onclick=()=>moving=!moving;
+left.onclick=()=>target=Math.max(160,target-80);
+right.onclick=()=>target=Math.min(240,target+80);
+
+// === BUZINA DO JOGADOR ===
+let playerHonking=0; // contador de frames restantes do efeito visual/lógico
+hornBtn.onclick=()=>{
+ if(!started) return;
+ playHonk(280);
+ playerHonking=40; // ~ por volta de 0.6s a 60fps, janela em que carros próximos "ouvem" a buzina
+};
+
+const coresMoto=['#c0392b','#2471a3','#1e8449','#d4ac0d','#7d3c98','#ca6f1e'];
+const coresCapacete=['#c0392b','#2471a3','#1e8449','#d4ac0d','#7d3c98','#ca6f1e','#222222','#eeeeee','#e67e22'];
+
+setInterval(()=>{
+ if(started&&traffic.length<10){
+   const lane=[160,240][Math.floor(Math.random()*3)];
+   let tipos=['car','car','moto','moto','bus','truck']; if(Math.random()<0.20){tipos.push('ambulance');}
+   if(!radio.paused && Math.random()<0.35){tipos.push('police');}
+   const t=tipos[Math.floor(Math.random()*tipos.length)];
+   const baseSpeed=(t==='ambulance'?10+Math.random()*3:t==='moto'?8.5+Math.random()*2:6.5+Math.random()*2.5);
+   const corMoto=coresMoto[Math.floor(Math.random()*coresMoto.length)];
+   const capAleatorio=coresCapacete[Math.floor(Math.random()*coresCapacete.length)];
+   const corCapacete=(Math.random()<0.5)?corMoto:capAleatorio;
+   traffic.push({x:lane,y:-120,t,speed:baseSpeed,baseSpeed,targetX:lane,corMoto,corCapacete});
+ }
+},2000);
+
+setInterval(()=>{
+ if(fuels.length<1) fuels.push({x:[160,240][Math.floor(Math.random()*3)],y:-80});
+},12000);
+
+setInterval(()=>{raining=Math.random()<0.5;},30000);
+setInterval(()=>{ if(started) maybeTriggerLightning(); },3000);
+
+setInterval(()=>{
+ if(cashs.length<1 && Math.random()<0.5 && traffic.length<3){
+   cashs.push({x:[160,240][Math.floor(Math.random()*3)],y:-80});
+ }
+},15000);
+
+
+function update(){
+ px+=(target-px)*0.15;
+
+ if(started&&moving && fuel>0){scroll+=4;fuel-=0.02;} if(fuel<=0&&started){resetGame('⛽ Seu carro parou porque a gasolina acabou!');}
+
+ // vento contínuo (oscilação suave) pras árvores balançarem
+ windTime+=0.025;
+ windGust+=(windGustTarget-windGust)*0.03;
+
+ // chuva: move as gotas e recicla quando saem da tela
+ if(raining){
+   rainDrops.forEach(d=>{
+     d.y+=d.speed;
+     d.x+=d.drift*0.3;
+     if(d.y>600){ d.y=-20; d.x=Math.random()*400; }
+     if(d.x>410){ d.x=-10; }
+   });
+ }
+
+ // relâmpago: flash decai rápido, depois cooldown
+ if(lightning.active){
+   lightning.timer+=1;
+   lightning.flashAlpha*=0.82;
+   if(lightning.timer>6 && lightning.flashAlpha<0.03){
+     lightning.active=false; lightning.flashAlpha=0;
+   }
+ }
+
+ traffic.forEach((v,i)=>{
+   if(started){
+      if(v.brake===undefined) v.brake=0;
+      // velocidade atual sempre tende de volta à velocidade base, a menos que esteja freando por risco
+      if(v.brake>0){ v.brake--; }
+      const speedAlvo=v.brake>0?v.baseSpeed*0.35:v.baseSpeed;
+      v.speed+=(speedAlvo-v.speed)*0.08;
+
+      v.y+=v.speed||4;
+
+      // posição segue a faixa-alvo suavemente (sem teleporte)
+      if(v.targetX===undefined) v.targetX=v.x;
+      v.x+=(v.targetX-v.x)*0.09;
+
+      // polícia segue jogador só com rádio ligado
+      if(v.t==='police' && !radio.paused){
+         if(v.x<px) v.targetX=px+0.01;
+         if(v.x>px) v.targetX=px-0.01;
+      }
+
+      const lanes=[160,240];
+
+      // cooldown da buzina deste veículo (evita buzinar toda hora)
+      if(v.honkCooldown>0) v.honkCooldown--;
+      if(v.honkTimer>0) v.honkTimer--;
+
+      // zona de antecedência: o carro "vê" o risco mais longe do que a zona de colisão real,
+      // dando tempo de frear/desviar com naturalidade em vez de manobra de última hora
+      const antecedencia=v.y>260 && v.y<470;
+      const zonaColisao=v.y>380 && v.y<520;
+      const mesmaFaixaJogador=Math.abs(v.x-px)<18;
+      const riscoColisaoJogador=mesmaFaixaJogador && zonaColisao;
+      const ehPolicialPerseguindo=(v.t==='police' && !radio.paused);
+
+      if(!ehPolicialPerseguindo && Math.abs(v.targetX-px)<18 && antecedencia){
+         // vem em rota de colisão com o jogador: tenta escolher outra faixa com antecedência
+         let livres=lanes.filter(l=>l!==px);
+         if(livres.length){
+            v.targetX=livres[0];
+         }
+         // se não der tempo de migrar de faixa (já muito próximo), freia em vez de desviar bruscamente
+         if(Math.abs(v.x-px)<18 && v.y>340){
+            v.brake=40;
+         }
+      }
+
+      // ainda em risco real na zona de colisão e sem conseguir desviar a tempo: freia
+      if(!ehPolicialPerseguindo && riscoColisaoJogador){
+         v.brake=40;
+         if(v.honkCooldown<=0 && Math.random()<0.5){
+            v.honkTimer=22; v.honkCooldown=90;
+         }
+      }
+
+      // passando do lado do carro do jogador (mesma zona de altura, faixa diferente) = saudação
+      const passandoAoLado=Math.abs(v.y-497)<40 && v.x!==px && !riscoColisaoJogador;
+      if(passandoAoLado && v.honkCooldown<=0 && !v.greeted){
+         v.greeted=true;
+         if(playerHonking>0){
+            // responde à buzina do jogador
+            v.honkTimer=22; v.honkCooldown=140;
+         } else if(Math.random()<0.04){
+            // de vez em quando buzina por conta própria ao passar
+            v.honkTimer=22; v.honkCooldown=140;
+         }
+      }
+      if(!passandoAoLado) v.greeted=false;
+
+      traffic.forEach((o,j)=>{
+         if(i!==j){
+            const pertoX=Math.abs(v.targetX-o.x)<18;
+            const pertoYAntecedencia=(o.y>v.y && (o.y-v.y)<140);
+            const pertoYColisao=(o.y>v.y && (o.y-v.y)<85);
+
+            if(pertoX && pertoYAntecedencia){
+               let livres=lanes.filter(l=>{
+                  let ocupado=false;
+                  traffic.forEach(t=>{
+                     if(t!==v && Math.abs(t.x-l)<10 && Math.abs(t.y-v.y)<90) ocupado=true;
+                  });
+                  return !ocupado;
+               });
+
+               if(livres.length){
+                  v.targetX=livres[Math.floor(Math.random()*livres.length)];
+               }
+               // se está bem próximo e não há faixa livre pra migrar, freia em vez de manobrar de repente
+               if(pertoYColisao && (!livres.length || Math.abs(v.x-o.x)<18)){
+                  v.brake=40;
+                  if(v.honkCooldown<=0 && Math.random()<0.4){
+                     v.honkTimer=22; v.honkCooldown=90;
+                  }
+               }
+            }
+         }
+      });
+   }
+ });
+ // toca o som de buzina dos NPCs que acabaram de disparar honkTimer neste frame
+ traffic.forEach(v=>{
+   if(v.honkTimer===22) playHonk(220);
+ });
+ if(playerHonking>0) playerHonking--;
+ updateVehicleSounds();
+ updatePlayerEngine();
+ fuels.forEach(v=>v.y+=started?4:0);
+
+ 
+cashs.forEach(c=>{
+   if(Math.abs(c.x-px)<30 && Math.abs(c.y-500)<40){
+      money+=100;
+      c.y=999;
+   }
+});
+
+
+cashs.forEach(c=>{
+  c.y+=started?4:0;
+});
+
+fuels.forEach(f=>{
+
+
+   if(Math.abs(f.x-px)<30 && Math.abs(f.y-500)<40){
+      fuel=100;
+      f.y=999;
+   }
+ });
+
+ traffic.forEach(v=>{
+ if(Math.abs(v.x-px)<26 && Math.abs(v.y-497)<45){
+   if(v.t==='police' && !radio.paused){
+      // === POLÍCIA COM SOM LIGADO: sistema progressivo de abordagens ===
+      if(!v.hit){
+         v.hit=true;
+         v.speed=0;
+         v.brake=120;
+         setTimeout(()=>{
+            // desliga o rádio automaticamente em todos os casos
+            radio.pause();
+            updateRadioUI();
+            v.y=1000;
+
+            policeParadaoCount++;
+            const _r=()=>Math.floor(Math.random()*3);
+
+            if(policeParadaoCount===1){
+               const msgs=[
+                  '🚔 PARA O VEÍCULO!\n\n— Ô meu irmão, baixa esse trem aí! Tô passando favor dessa vez, mas na próxima você desliga esse paredão antes que eu chegue, tá ouvindo?\n\nSom desligado. Segue o rolê!',
+                  '🚔 ABORDAGEM POLICIAL!\n\n— Para o veículo! Escuta, dessa vez eu deixo passar… mas desliga esse som, rapaz! Vizinhança toda reclamando!\n\nSom desligado. Pode ir! ✌️',
+                  '🚔 EI, PARA AÍ!\n\n— Que volume é esse? Olha, hoje tô de boa, mas desliga esse paredão e segue o rolê na moral!\n\nSom desligado. Boa viagem! 😎',
+               ];
+               alert(msgs[_r()]);
+            } else if(policeParadaoCount===2){
+               const msgs=[
+                  '🚔 DE NOVO VOCÊ?!\n\n— Falei pra desligar esse som e você ligou de novo?! Última vez que eu deixo passar, viu? Na próxima é multa na certa!\n\nSom desligado. Vai indo! 😤',
+                  '🚔 VOCÊ DE NOVO!\n\n— Você de novo com esse paredão?! Tô avisando: é a ÚLTIMA vez. Desliga agora e some daqui antes que eu mude de ideia!\n\nSom desligado. Circula! 🚨',
+                  '🚔 OLHA QUE COINCIDÊNCIA!\n\n— Mesmo carro, mesmo paredão. Tá me testando? Última chance. Desliga e vai embora!\n\nSom desligado. Xô daqui! 🖐️',
+               ];
+               alert(msgs[_r()]);
+            } else {
+               const multaValor=300;
+               if(money>=multaValor){
+                  money-=multaValor;
+                  let msgs;
+                  if(policeParadaoCount===3){
+                     msgs=[
+                        '🚔 ERA PRA ACONTECER!\n\n— Disse que ia multar, multei! R$300 por som alto. Desliga esse paredão e sai logo antes que eu reboque também! 💸\n\nSom desligado. Multa aplicada!',
+                        '🚔 SEM CONVERSA MAIS NÃO!\n\n— Não tem conversa mais não! R$300 por perturbação sonora. Devia ter desligado quando eu avisei!\n\nSom desligado. Paga e vai embora! 📋',
+                        '🚔 PAREDÃO TEM PREÇO!\n\n— Paredão tem preço, meu amigo! R$300 na cabeça. Agora desliga esse som e circula antes que eu chame o reboque!\n\nSom desligado. Segue o baile! 😏',
+                     ];
+                  } else if(policeParadaoCount===4){
+                     msgs=[
+                        '🚔 OUTRA VEZ?!\n\n— OUTRA VEZ?! Você tá me provocando?! R$300 de novo! Continua com esse paredão que eu confisco o rádio também!\n\nSom desligado. Multa aplicada! 😡',
+                        '🚔 IMPOSSÍVEL!\n\n— Impossível! Já é a quarta vez! R$300 fora do seu bolso. Desliga esse som ou a próxima multa vai doer mais!\n\nSom desligado. Paga logo! 😠',
+                        '🚔 MEU DEUS DO CÉU!\n\n— Meu Deus do céu… R$300 de novo por esse paredão. Você gosta de pagar multa, é?!\n\nSom desligado. Some daqui! 🤦',
+                     ];
+                  } else if(policeParadaoCount===5){
+                     msgs=[
+                        '🚔 QUINTA VEZ!!\n\n— QUINTA VEZ! Eu tô ficando é com raiva! R$300 de novo e olha que bom que ainda não reboquei! Desliga esse inferno!\n\nSom desligado. Multa aplicada! 😤',
+                        '🚔 TEIMOSO DEMAIS!\n\n— Você é teimoso demais! Quinta abordagem, R$300 de novo. Continua que eu chamo reforço!\n\nSom desligado. Paga e circula! 🚨',
+                        '🚔 JÁ TÔ FICANDO FAMOSO!\n\n— Meu parceiro perguntou se é o mesmo carro… É! R$300. Desliga esse paredão pelo amor de Deus!\n\nSom desligado. Vai embora! 🙄',
+                     ];
+                  } else {
+                     msgs=[
+                        '🚔 JÁ PERDI AS CONTAS!\n\n— Já perdi as contas! R$300 de novo! A essa altura você já pagou o meu salário do mês. Desliga logo!\n\nSom desligado. Multa aplicada! 😂',
+                        '🚔 VOCÊ É LENDA!\n\n— Você é lenda! Nunca vi ninguém pagar tanta multa assim. R$300. Continua que vou te dar um troféu!\n\nSom desligado. Paga aí campeão! 🏆',
+                        '🚔 MINHA ESPOSA NÃO ACREDITA!\n\n— Minha esposa nem acredita quando eu conto. R$300 de novo, meu rei! Pelo menos desliga por uns 5 minutos…\n\nSom desligado. Valeu pelo dinheiro! 👑',
+                     ];
+                  }
+                  alert(msgs[_r()]);
+               } else {
+                  const msgs=[
+                     '🚔 CARRO APREENDIDO!\n\n— Multa de R$300 por som alto e sem um real no bolso? O carro vai pro pátio! Devia ter desligado quando eu avisei…\n\nGame over! 😭',
+                     '🚔 FOI ATÉ BOM!\n\n— Paredão ligado, carteira vazia… O carro ficou aqui! Vai a pé mesmo. Da próxima vez ouve quando a polícia fala!\n\nGame over! 🔒',
+                     '🚔 ERA SÓ TER DESLIGADO!\n\n— Era só ter desligado o som! Agora o carro tá apreendido e você tá no pé. Guarda isso pra próxima vida!\n\nGame over! 🚗💨',
+                  ];
+                  resetGame(msgs[_r()]);
+               }
+            }
+         },400);
+      }
+   } else {
+      // === BATIDA NORMAL (carro, ônibus, caminhão, ambulância, polícia sem rádio) ===
+      if(!v.hit){
+         v.hit=true;
+         lives=Math.max(0,lives-1);
+
+         // dispara animação de batida
+         crashAnim.active=true;
+         crashAnim.x=(v.x+px)/2;
+         crashAnim.y=(v.y+497)/2;
+         crashAnim.timer=crashAnim.duration;
+         crashAnim.shake=8;
+
+         // após a batida: carro desvia pra outra faixa e segue embora
+         const lanes=[160,240];
+         const outraFaixa=lanes.find(l=>Math.abs(l-v.x)>20) || lanes[0];
+         v.targetX=outraFaixa;
+         v.brake=0;
+         v.speed=v.baseSpeed*1.2; // sai mais rápido depois da batida
+
+         if(lives===0){
+            if(money>=500){
+               money-=500;
+               lives=3;
+               setTimeout(()=>alert('🔧 SEU CARRO FOI PARA O CONSERTO!\nCusto: R$500'),300);
+            }else{
+               setTimeout(()=>resetGame('🚗 SEU CARRO FOI PARA O DEPÓSITO!'),300);
+            }
+         }
+      } else {
+         // depois de bater (v.hit=true), não fica colado no jogador — garante que vai embora
+         if(Math.abs(v.y-497)<30 && v.speed < v.baseSpeed){
+            v.speed=v.baseSpeed*1.1;
+         }
+      }
+   }
+ }
+});
+traffic=traffic.filter(v=>v.y<800);
+ fuels=fuels.filter(v=>v.y<700); cashs=cashs.filter(v=>v.y<700);
+
+ // === FÍSICA DO QUEBRA-MOLA ===
+ // Ciclo de 9000 → QM aparece a cada 9000/0.6 = 15000 frames (~62s a 60fps)
+ const bumpScreenY=(0.5*9000+scroll*0.6)%9000-150;
+ const playerCrosses=started&&moving&&Math.abs(bumpScreenY-497)<6&&playerBounce===0&&playerBounceVel===0;
+ if(playerCrosses){playerBounceVel=4.5;}
+ playerBounceVel-=playerBounce*0.55; playerBounceVel*=0.68;
+ playerBounce+=playerBounceVel;
+ if(Math.abs(playerBounce)<0.05&&Math.abs(playerBounceVel)<0.05){playerBounce=0;playerBounceVel=0;}
+
+ // === ATUALIZA ANIMAÇÃO DE BATIDA ===
+ if(crashAnim.active){
+   crashAnim.timer--;
+   if(crashAnim.timer<=0){ crashAnim.active=false; crashAnim.shake=0; }
+ }
+ traffic.forEach(v=>{
+   if(v.bounce===undefined){v.bounce=0;v.bounceVel=0;}
+   if(started&&Math.abs(v.y-bumpScreenY)<8&&v.bounce===0&&v.bounceVel===0){v.bounceVel=3.5;}
+   v.bounceVel-=v.bounce*0.55; v.bounceVel*=0.68;
+   v.bounce+=v.bounceVel;
+   if(Math.abs(v.bounce)<0.05&&Math.abs(v.bounceVel)<0.05){v.bounce=0;v.bounceVel=0;}
+ });
+
+ let barra='█'.repeat(Math.max(1,Math.floor(fuel/20)));
+ if(started){ gameMinutes+=0.05; }
+ if(started) updateTemperature();
+ let h=Math.floor(gameMinutes/60)%24;
+ let m=Math.floor(gameMinutes%60);
+ const ampm=h<12?'AM':'PM';
+ let h12=h%12; if(h12===0) h12=12;
+ let icon='☀️';
+ const nightNow=(h>=18||h<6);
+ if(lightning.active) icon='⚡'; else if(raining) icon='🌧️'; else if(nightNow) icon='🌕';
+ hud.innerHTML=`
+ <div class="hudItem">❤️ <span>${lives}</span></div>
+ <div class="hudItem">💰 <span>R$${money}</span></div>
+ <div class="hudItem">⛽ <span>${Math.floor(fuel)}%</span></div>
+ <div class="hudItem">🌡️ <span>${Math.round(tempCurrent)}°C</span></div>
+ <div class="hudItem">🕒 <span>${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ampm}</span></div>
+ <div class="hudItem">${icon}</div>
+ `;
+}
+
+// pneus vista de cima: retângulos laterais
+function pneus(x,y,hw,hh,pw,ph){
+ // hw/hh = meia largura/altura do corpo, pw/ph = largura/altura do pneu
+ ctx.fillStyle='#111';
+ ctx.fillRect(x-hw-pw, y-hh+6,       pw, ph); // frente esq
+ ctx.fillRect(x+hw,    y-hh+6,       pw, ph); // frente dir
+ ctx.fillRect(x-hw-pw, y+hh-6-ph,    pw, ph); // trás esq
+ ctx.fillRect(x+hw,    y+hh-6-ph,    pw, ph); // trás dir
+ // aro
+ ctx.fillStyle='#555';
+ ctx.fillRect(x-hw-pw+1, y-hh+8,    pw-2, ph-4);
+ ctx.fillRect(x+hw+1,    y-hh+8,    pw-2, ph-4);
+ ctx.fillRect(x-hw-pw+1, y+hh-4-ph, pw-2, ph-4);
+ ctx.fillRect(x+hw+1,    y+hh-4-ph, pw-2, ph-4);
+}
+
+function drawVehicle(v){
+ const x=v.x;
+ const y=v.y - (v.bounce||0)*1.5;
+ ctx.save();
+
+ // ===================== CAR - CARRO POPULAR =====================
+ if(v.t==='car'){
+   const hw=13,hh=23; // 26x46px
+   // escolhe cor baseada num hash do objeto pra ser consistente
+   const cores=['#c0392b','#2471a3','#1e8449','#d4ac0d','#7d3c98','#ca6f1e'];
+   if(!v.cor) v.cor=cores[Math.floor(Math.random()*cores.length)];
+
+   pneus(x,y,hw,hh,5,9);
+
+   // carroceria
+   ctx.fillStyle=v.cor;
+   ctx.fillRect(x-hw,y-hh,hw*2,hh*2);
+   ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.8;
+   ctx.strokeRect(x-hw,y-hh,hw*2,hh*2);
+
+   // capô frente
+   ctx.fillStyle='rgba(0,0,0,0.12)';
+   ctx.fillRect(x-hw,y-hh,hw*2,14);
+
+   // parabrisa (vindo de cima = vidro dianteiro)
+   ctx.fillStyle='rgba(130,205,238,0.80)';
+   ctx.fillRect(x-hw+3,y-hh+14,hw*2-6,9);
+
+   // teto
+   ctx.fillStyle='rgba(0,0,0,0.18)';
+   ctx.fillRect(x-hw+3,y-hh+23,hw*2-6,14);
+
+   // vidro traseiro
+   ctx.fillStyle='rgba(120,195,228,0.65)';
+   ctx.fillRect(x-hw+3,y-hh+37,hw*2-6,7);
+
+   // faróis
+   ctx.fillStyle='#fffbe0';
+   ctx.fillRect(x-hw,y-hh,5,3);
+   ctx.fillRect(x+hw-5,y-hh,5,3);
+
+   // lanternas
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-hw,y+hh-3,6,3);
+   ctx.fillRect(x+hw-6,y+hh-3,6,3);
+
+   // espelhos
+   ctx.fillStyle='#888';
+   ctx.fillRect(x-hw-3,y-hh+16,3,4);
+   ctx.fillRect(x+hw,  y-hh+16,3,4);
+ }
+
+ // ===================== BUS - ÔNIBUS =====================
+ if(v.t==='bus'){
+   const hw=16,hh=38; // 32x76px
+   pneus(x,y,hw,hh,6,11);
+   // pneus traseiros duplos (ônibus tem rodas duplas atrás)
+   ctx.fillStyle='#111';
+   ctx.fillRect(x-hw-6, y+hh-17, 6, 11);
+   ctx.fillRect(x+hw,   y+hh-17, 6, 11);
+   ctx.fillStyle='#333';
+   ctx.fillRect(x-hw-5, y+hh-15, 4, 7);
+   ctx.fillRect(x+hw+1, y+hh-15, 4, 7);
+
+   // carroceria amarela
+   ctx.fillStyle='#f0c30f';
+   ctx.fillRect(x-hw,y-hh,hw*2,hh*2);
+   ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1;
+   ctx.strokeRect(x-hw,y-hh,hw*2,hh*2);
+
+   // faixa laranja lateral
+   ctx.fillStyle='#e67e22';
+   ctx.fillRect(x-hw,y-10,hw*2,8);
+
+   // para-choque frente (preto)
+   ctx.fillStyle='#222';
+   ctx.fillRect(x-hw,y-hh,hw*2,5);
+
+   // vidro dianteiro grande
+   ctx.fillStyle='rgba(130,205,238,0.80)';
+   ctx.fillRect(x-hw+2,y-hh+5,hw*2-4,12);
+
+   // janelas laterais (fileira)
+   ctx.fillStyle='rgba(120,190,230,0.70)';
+   for(let i=0;i<4;i++){
+     ctx.fillRect(x-hw+2, y-hh+20+i*14, hw*2-4, 10);
+   }
+
+   // teto (grade de ventilação)
+   ctx.fillStyle='rgba(0,0,0,0.10)';
+   ctx.fillRect(x-hw+3,y-14,hw*2-6,20);
+   ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=0.5;
+   for(let i=0;i<3;i++){
+     ctx.beginPath();ctx.moveTo(x-hw+3,y-12+i*6);ctx.lineTo(x+hw-3,y-12+i*6);ctx.stroke();
+   }
+
+   // para-choque traseiro
+   ctx.fillStyle='#222';
+   ctx.fillRect(x-hw,y+hh-5,hw*2,5);
+
+   // faróis
+   ctx.fillStyle='#fffbe0';
+   ctx.fillRect(x-hw,y-hh,6,4);
+   ctx.fillRect(x+hw-6,y-hh,6,4);
+
+   // lanternas
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-hw,y+hh-4,7,4);
+   ctx.fillRect(x+hw-7,y+hh-4,7,4);
+ }
+
+ // ===================== POLICE - VIATURA =====================
+ if(v.t==='police'){
+   const hw=14,hh=25; // 28x50px
+   pneus(x,y,hw,hh,5,9);
+
+   // carroceria branca/prata (viatura)
+   ctx.fillStyle='#e8e8e8';
+   ctx.fillRect(x-hw,y-hh,hw*2,hh*2);
+   ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=0.8;
+   ctx.strokeRect(x-hw,y-hh,hw*2,hh*2);
+
+   // faixa preta lateral PM
+   ctx.fillStyle='#111';
+   ctx.fillRect(x-hw,y-6,hw*2,10);
+   // escrita PM na faixa
+   ctx.fillStyle='#fff'; ctx.font='bold 6px Arial'; ctx.textAlign='center';
+   ctx.fillText('PM',x,y+3); ctx.textAlign='left';
+
+   // capô
+   ctx.fillStyle='rgba(0,0,0,0.10)';
+   ctx.fillRect(x-hw,y-hh,hw*2,13);
+
+   // parabrisa
+   ctx.fillStyle='rgba(130,205,238,0.80)';
+   ctx.fillRect(x-hw+3,y-hh+13,hw*2-6,9);
+
+   // teto + giroflex piscando
+   ctx.fillStyle='rgba(0,0,0,0.15)';
+   ctx.fillRect(x-hw+3,y-hh+22,hw*2-6,14);
+   // giroflex (barra led vermelha e azul piscando)
+   const t=Date.now();
+   ctx.fillStyle=(t%400<200)?'#ff2020':'#2040ff';
+   ctx.fillRect(x-hw+4,y-hh+24,(hw*2-8)/2,4);
+   ctx.fillStyle=(t%400<200)?'#2040ff':'#ff2020';
+   ctx.fillRect(x,(t%400<200)?y-hh+24:y-hh+24,(hw*2-8)/2,4);
+
+   // vidro traseiro
+   ctx.fillStyle='rgba(120,195,228,0.65)';
+   ctx.fillRect(x-hw+3,y-hh+36,hw*2-6,7);
+
+   // faróis
+   ctx.fillStyle='#fffee0';
+   ctx.fillRect(x-hw,y-hh,5,3);
+   ctx.fillRect(x+hw-5,y-hh,5,3);
+
+   // lanternas
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-hw,y+hh-3,5,3);
+   ctx.fillRect(x+hw-5,y+hh-3,5,3);
+
+   // espelhos
+   ctx.fillStyle='#888';
+   ctx.fillRect(x-hw-3,y-hh+15,3,4);
+   ctx.fillRect(x+hw,  y-hh+15,3,4);
+ }
+
+ // ===================== AMBULANCE - AMBULÂNCIA =====================
+ if(v.t==='ambulance'){
+   const hw=16,hh=35; // 32x70px (maior, van)
+   pneus(x,y,hw,hh,6,10);
+
+   // carroceria branca
+   ctx.fillStyle='#f5f5f5';
+   ctx.fillRect(x-hw,y-hh,hw*2,hh*2);
+   ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=0.8;
+   ctx.strokeRect(x-hw,y-hh,hw*2,hh*2);
+
+   // faixa laranja/vermelha lateral
+   ctx.fillStyle='#e74c3c';
+   ctx.fillRect(x-hw,y-8,hw*2,6);
+   ctx.fillStyle='#f39c12';
+   ctx.fillRect(x-hw,y-2,hw*2,4);
+
+   // capô (frente da van)
+   ctx.fillStyle='#ddd';
+   ctx.fillRect(x-hw,y-hh,hw*2,10);
+
+   // parabrisa grande
+   ctx.fillStyle='rgba(130,205,238,0.80)';
+   ctx.fillRect(x-hw+2,y-hh+10,hw*2-4,12);
+
+   // cruz vermelha no teto (vista de cima)
+   ctx.fillStyle='#e74c3c';
+   ctx.fillRect(x-3,y-hh+25,6,20);   // vertical
+   ctx.fillRect(x-10,y-hh+31,20,8);  // horizontal
+
+   // sirene piscando no teto (frente)
+   const ta=Date.now();
+   ctx.fillStyle=(ta%300<150)?'#ff2020':'#2040ff';
+   ctx.fillRect(x-8,y-hh+4,7,4);
+   ctx.fillStyle=(ta%300<150)?'#2040ff':'#ff2020';
+   ctx.fillRect(x+1,y-hh+4,7,4);
+
+   // porta traseira (duas folhas)
+   ctx.fillStyle='#e0e0e0';
+   ctx.fillRect(x-hw,y+hh-12,hw*2,12);
+   ctx.strokeStyle='#bbb'; ctx.lineWidth=0.8;
+   ctx.beginPath();ctx.moveTo(x,y+hh-12);ctx.lineTo(x,y+hh);ctx.stroke();
+   // maçaneta
+   ctx.fillStyle='#aaa';
+   ctx.fillRect(x-2,y+hh-5,4,2);
+
+   // faróis
+   ctx.fillStyle='#fffbe0';
+   ctx.fillRect(x-hw,y-hh,6,4);
+   ctx.fillRect(x+hw-6,y-hh,6,4);
+
+   // lanternas
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-hw,y+hh-4,7,4);
+   ctx.fillRect(x+hw-7,y+hh-4,7,4);
+
+   // espelhos grandes (van)
+   ctx.fillStyle='#888';
+   ctx.fillRect(x-hw-4,y-hh+12,4,6);
+   ctx.fillRect(x+hw,  y-hh+12,4,6);
+ }
+
+ // ===================== TRUCK - CAMINHÃO =====================
+ if(v.t==='truck'){
+   const hw=17,hh=45; // 34x90px
+   // pneus: dianteiros (frente = baixo, y+hh) e traseiros (cima, y-hh)
+   ctx.fillStyle='#111';
+   // dianteiros simples (na cabine, em baixo)
+   ctx.fillRect(x-hw-6,y+hh-16, 6,10);
+   ctx.fillRect(x+hw,  y+hh-16, 6,10);
+   // traseiros duplos (sob o baú, em cima)
+   ctx.fillRect(x-hw-6,y-hh+6,  6,10);
+   ctx.fillRect(x+hw,  y-hh+6,  6,10);
+   ctx.fillRect(x-hw-6,y-hh+18, 6,10);
+   ctx.fillRect(x+hw,  y-hh+18, 6,10);
+   // aros
+   ctx.fillStyle='#555';
+   ctx.fillRect(x-hw-5,y+hh-14, 4,6);
+   ctx.fillRect(x+hw+1,y+hh-14, 4,6);
+   ctx.fillRect(x-hw-5,y-hh+8,  4,6);
+   ctx.fillRect(x+hw+1,y-hh+8,  4,6);
+   ctx.fillRect(x-hw-5,y-hh+20, 4,6);
+   ctx.fillRect(x+hw+1,y-hh+20, 4,6);
+
+   // baú (carroceria traseira cinza) — fica em CIMA (traseira)
+   ctx.fillStyle='#bdc3c7';
+   ctx.fillRect(x-hw,y-hh,hw*2,hh*2-22);
+   ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=0.8;
+   ctx.strokeRect(x-hw,y-hh,hw*2,hh*2-22);
+   // detalhes do baú (ripas)
+   ctx.strokeStyle='rgba(0,0,0,0.10)'; ctx.lineWidth=0.5;
+   for(let i=1;i<5;i++){
+     ctx.beginPath();
+     ctx.moveTo(x-hw,y-hh+i*((hh*2-22)/5));
+     ctx.lineTo(x+hw,y-hh+i*((hh*2-22)/5));
+     ctx.stroke();
+   }
+
+   // lanternas do baú (traseira = cima)
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-hw,y-hh,7,4);
+   ctx.fillRect(x+hw-7,y-hh,7,4);
+
+   // separação cabine/baú
+   ctx.fillStyle='rgba(0,0,0,0.25)';
+   ctx.fillRect(x-hw,y+hh-25,hw*2,3);
+
+   // cabine (azul escuro) — fica em BAIXO (frente, direção do movimento)
+   ctx.fillStyle='#1a3a6b';
+   ctx.fillRect(x-hw,y+hh-24,hw*2,24);
+   ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.8;
+   ctx.strokeRect(x-hw,y+hh-24,hw*2,24);
+
+   // parabrisa da cabine (frente = baixo)
+   ctx.fillStyle='rgba(130,205,238,0.85)';
+   ctx.fillRect(x-hw+3,y+hh-20,hw*2-6,12);
+
+   // para-choque dianteiro (frente = baixo)
+   ctx.fillStyle='#888';
+   ctx.fillRect(x-hw,y+hh-4,hw*2,4);
+
+   // faróis (frente = baixo)
+   ctx.fillStyle='#fffbe0';
+   ctx.fillRect(x-hw,y+hh-4,6,3);
+   ctx.fillRect(x+hw-6,y+hh-4,6,3);
+   // faróis auxiliares
+   ctx.fillStyle='#ffe066';
+   ctx.fillRect(x-6,y+hh-4,5,2);
+   ctx.fillRect(x+1,y+hh-4,5,2);
+
+   // espelhos grandes (na cabine, frente = baixo)
+   ctx.fillStyle='#888';
+   ctx.fillRect(x-hw-5,y+hh-22,5,8);
+   ctx.fillRect(x+hw,  y+hh-22,5,8);
+ }
+
+ // ===================== MOTO =====================
+ if(v.t==='moto'){
+   const hw=7,hh=18; // 14×36px — menor que carro (26×46)
+   const cor=v.corMoto||'#c0392b';
+   const corCap=v.corCapacete||'#222';
+
+   // pneu traseiro (topo = traseira visual pois vem de cima)
+   ctx.fillStyle='#111';
+   ctx.fillRect(x-3,y-hh,6,8);
+   ctx.fillStyle='#2a2a2a';
+   ctx.fillRect(x-1,y-hh+1,2,5);
+
+   // subquadro traseiro
+   ctx.fillStyle='#444';
+   ctx.fillRect(x-2,y-hh+8,4,5);
+
+   // assento (estreito, preto)
+   ctx.fillStyle='#111';
+   ctx.fillRect(x-4,y-hh+13,8,8);
+
+   // tanque (parte mais larga, colorida)
+   ctx.fillStyle=cor;
+   ctx.fillRect(x-hw,y-hh+21,hw*2,10);
+   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=0.6;
+   ctx.strokeRect(x-hw,y-hh+21,hw*2,10);
+   // brilho no tanque
+   const corBrilho=cor+'cc';
+   ctx.fillStyle='rgba(255,255,255,0.18)';
+   ctx.fillRect(x-hw+2,y-hh+22,5,4);
+
+   // bloco motor
+   ctx.fillStyle='#333';
+   ctx.fillRect(x-4,y-hh+31,8,5);
+   ctx.fillStyle='#3a3a3a';
+   ctx.fillRect(x-3,y-hh+32,6,3);
+
+   // corpo do piloto (curvado sobre guidão, visto de cima)
+   ctx.fillStyle='#1a1a1a';
+   ctx.beginPath();
+   ctx.ellipse(x, y+hh-14, 4, 5, 0, 0, Math.PI*2);
+   ctx.fill();
+
+   // braços do piloto
+   ctx.fillStyle='#222';
+   ctx.fillRect(x-7,y+hh-17,3,2);
+   ctx.fillRect(x+4, y+hh-17,3,2);
+
+   // capacete (círculo compacto, cor sorteada)
+   ctx.fillStyle=corCap;
+   ctx.beginPath();
+   ctx.arc(x,y+hh-19,4,0,Math.PI*2);
+   ctx.fill();
+   ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=0.5;
+   ctx.stroke();
+   // viseira (sempre escura/fumê)
+   ctx.fillStyle='rgba(30,80,140,0.85)';
+   ctx.beginPath();
+   ctx.ellipse(x,y+hh-19,2.5,1.5,0,0,Math.PI*2);
+   ctx.fill();
+
+   // guidão (fino)
+   ctx.fillStyle='#666';
+   ctx.fillRect(x-8,y+hh-14,16,2);
+
+   // garfo dianteiro
+   ctx.fillStyle='#555';
+   ctx.fillRect(x-2,y+hh-10,4,7);
+
+   // pneu dianteiro (embaixo = frente do movimento)
+   ctx.fillStyle='#111';
+   ctx.fillRect(x-3,y+hh-3,6,8);
+   ctx.fillStyle='#2a2a2a';
+   ctx.fillRect(x-1,y+hh-2,2,5);
+
+   // farol (frente = embaixo)
+   ctx.fillStyle='#fffbe0';
+   ctx.fillRect(x-3,y+hh+4,6,2);
+
+   // lanterna traseira (traseira = cima)
+   ctx.fillStyle='#cc0000';
+   ctx.fillRect(x-3,y-hh,6,2);
+ }
+
+ // indicador visual de buzina (ondas sonoras saindo do veículo)
+ if(v.honkTimer>0){
+   ctx.save();
+   const t=v.honkTimer/22;
+   ctx.globalAlpha=Math.max(0,t);
+   ctx.strokeStyle='#ffe066'; ctx.lineWidth=1.5;
+   for(let r=0;r<2;r++){
+     const radius=10+r*7+(1-t)*10;
+     ctx.beginPath();
+     ctx.arc(x,y-28,radius,Math.PI*1.15,Math.PI*1.85);
+     ctx.stroke();
+   }
+   ctx.globalAlpha=1;
+   ctx.restore();
+ }
+
+ ctx.restore();
+}
+
+function drawBuilding(x,y,type){
+ // vista de cima: x=centro, y=topo do lote
+ ctx.save();
+ if(type===0){
+   // CASA simples - telhado 4 águas visto de cima (quadrado, não deitado)
+   ctx.fillStyle='#b5651d'; ctx.fillRect(x,y,70,62);
+   ctx.fillStyle='#c97b3a'; ctx.fillRect(x+4,y+4,62,54);
+   // cumeeiras (X do telhado de 4 águas, vista de cima)
+   ctx.strokeStyle='#8b4513'; ctx.lineWidth=2;
+   ctx.beginPath();ctx.moveTo(x+4,y+4);ctx.lineTo(x+35,y+31);ctx.lineTo(x+66,y+4);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(x+4,y+58);ctx.lineTo(x+35,y+31);ctx.lineTo(x+66,y+58);ctx.stroke();
+   // sombra (lado direito e inferior do lote)
+   ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(x+62,y+4,8,58);
+   ctx.fillRect(x+4,y+56,62,6);
+   // beiral (contorno do telhado)
+   ctx.strokeStyle='#7a3a10'; ctx.lineWidth=1;
+   ctx.strokeRect(x+4,y+4,62,54);
+   // quintal (grama mais escura ao lado da casa, dentro do próprio lote)
+   ctx.fillStyle='#2d6e35'; ctx.fillRect(x,y+62,70,18);
+ } else if(type===1){
+   // PRÉDIO - laje de concreto vista de cima
+   ctx.fillStyle='#78787a'; ctx.fillRect(x,y,75,60);
+   ctx.fillStyle='#919193'; ctx.fillRect(x+3,y+3,69,54);
+   ctx.strokeStyle='#5c5c5e'; ctx.lineWidth=1;
+   ctx.strokeRect(x+3,y+3,69,54);
+   // grade de claraboias/dutos de ventilação no teto
+   ctx.fillStyle='rgba(60,60,62,0.85)';
+   for(let r=0;r<3;r++) for(let c=0;c<4;c++){
+     ctx.fillRect(x+8+c*16,y+8+r*16,10,9);
+   }
+   // caixa d'água central
+   ctx.fillStyle='#666'; ctx.fillRect(x+27,y+22,21,20);
+   ctx.fillStyle='#4d4d4d'; ctx.fillRect(x+29,y+24,17,16);
+   ctx.strokeStyle='#3a3a3a'; ctx.lineWidth=0.6;
+   ctx.strokeRect(x+29,y+24,17,16);
+   // sombra
+   ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(x+68,y+4,8,58);
+   ctx.fillRect(x+3,y+57,72,6);
+ } else if(type===2){
+   // LOJA COMERCIAL - teto visto de cima (laje com domos de claraboia, igual padrão dos outros)
+   ctx.fillStyle='#37474f'; ctx.fillRect(x,y,80,52);
+   ctx.fillStyle='#455a64'; ctx.fillRect(x+3,y+3,74,46);
+   ctx.strokeStyle='#263238'; ctx.lineWidth=1;
+   ctx.strokeRect(x+3,y+3,74,46);
+   // claraboias (domos translúcidos na laje)
+   ctx.fillStyle='rgba(120,190,230,0.55)';
+   ctx.beginPath();ctx.ellipse(x+22,y+26,11,8,0,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.ellipse(x+58,y+26,11,8,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=0.6;
+   ctx.beginPath();ctx.ellipse(x+22,y+26,11,8,0,0,Math.PI*2);ctx.stroke();
+   ctx.beginPath();ctx.ellipse(x+58,y+26,11,8,0,0,Math.PI*2);ctx.stroke();
+   // ar-condicionado/caixas no teto
+   ctx.fillStyle='#263238'; ctx.fillRect(x+34,y+36,12,9);
+   // sombra
+   ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(x+74,y+4,8,46);
+   ctx.fillRect(x+4,y+44,74,6);
+ } else if(type===3){
+   // POSTO DE GASOLINA - cobertura/marquise
+   ctx.fillStyle='#e8e8e8'; ctx.fillRect(x,y,78,55);
+   ctx.fillStyle='#fff'; ctx.fillRect(x+4,y+4,70,47);
+   // pilares da cobertura
+   ctx.fillStyle='#ccc';
+   ctx.fillRect(x+4,y+4,6,47); ctx.fillRect(x+68,y+4,6,47);
+   // bombas de combustível
+   ctx.fillStyle='#f44336'; ctx.fillRect(x+18,y+16,10,22);
+   ctx.fillStyle='#f44336'; ctx.fillRect(x+50,y+16,10,22);
+   ctx.fillStyle='#222';
+   ctx.fillRect(x+20,y+18,6,8); ctx.fillRect(x+52,y+18,6,8);
+   ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(x+70,y+5,10,50);
+ } else if(type===4){
+   // CASA GRANDE com varanda - vista de cima (quadrada, telhado 4 águas)
+   ctx.fillStyle='#a0522d'; ctx.fillRect(x,y,78,55);
+   ctx.fillStyle='#b8651f'; ctx.fillRect(x+3,y+3,72,49);
+   // cumeeiras em X (telhado 4 águas visto de cima)
+   ctx.strokeStyle='#7a3a10'; ctx.lineWidth=1.5;
+   ctx.beginPath();ctx.moveTo(x+3,y+3);ctx.lineTo(x+39,y+27);ctx.lineTo(x+75,y+3);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(x+3,y+52);ctx.lineTo(x+39,y+27);ctx.lineTo(x+75,y+52);ctx.stroke();
+   ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(x+3,y+44,72,8);
+   // varanda (faixa abaixo do telhado, ainda dentro do lote, vista de cima)
+   ctx.fillStyle='#d4a96a'; ctx.fillRect(x,y+55,78,20);
+   ctx.strokeStyle='#b07a30'; ctx.lineWidth=0.8;
+   for(let v=0;v<8;v++){ctx.beginPath();ctx.moveTo(x+v*10+5,y+55);ctx.lineTo(x+v*10+5,y+75);ctx.stroke();}
+   // quintal com árvore (parte de baixo do lote)
+   ctx.fillStyle='#2a6030'; ctx.fillRect(x,y+75,78,25);
+   {
+     const seed=(x*0.43+y*0.77);
+     const windMul=raining?2.6:1;
+     const sway=(Math.sin(windTime+seed)*0.5+windGust*0.6)*windMul;
+     ctx.fillStyle='#1a5020';
+     ctx.beginPath();ctx.arc(x+20+sway,y+88,8,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#2d7040';
+     ctx.beginPath();ctx.arc(x+20+sway,y+88,5,0,Math.PI*2);ctx.fill();
+   }
+ }
+ ctx.restore();
+}
+
+function drawSidewalkObject(x,y,type){
+ ctx.save();
+ if(type===0){
+   // ÁRVORE vista de cima, com balanço de vento (suave normalmente, mais forte na chuva)
+   const seed=(x*0.37+y*0.91);
+   const windMul=raining?2.6:1;
+   const sway=(Math.sin(windTime+seed)*0.5+windGust*0.6)*windMul;
+   const sx=x+sway, sy=y+sway*0.3;
+   ctx.fillStyle='#1a4a20';
+   ctx.beginPath();ctx.arc(sx,sy,9,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#2d7a35';
+   ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#3d9a45';
+   ctx.beginPath();ctx.arc(sx-2+sway*0.4,sy-2,3,0,Math.PI*2);ctx.fill();
+   // sombra (fica no lugar fixo, só a copa balança)
+   ctx.globalAlpha=0.2; ctx.fillStyle='#000';
+   ctx.beginPath();ctx.ellipse(x+4,y+5,7,4,0,0,Math.PI*2);ctx.fill();
+   ctx.globalAlpha=1;
+ } else if(type===1){
+   // LIXEIRA
+   ctx.fillStyle='#555'; ctx.fillRect(x-4,y-6,8,10);
+   ctx.fillStyle='#333'; ctx.fillRect(x-3,y-5,6,8);
+   ctx.fillStyle='#666'; ctx.fillRect(x-4,y-7,8,3);
+ } else if(type===2){
+   // ARBUSTO, balança um pouco menos que a árvore
+   const seed=(x*0.51+y*1.13);
+   const windMul=raining?2.6:1;
+   const sway=(Math.sin(windTime*1.3+seed)*0.3+windGust*0.4)*windMul;
+   const sx=x+sway;
+   ctx.fillStyle='#2a5e2a';
+   ctx.beginPath();ctx.arc(sx,y,6,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#3a7a3a';
+   ctx.beginPath();ctx.arc(sx-3,y,4,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.arc(sx+3,y-2,4,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
+}
+
+function drawStreetlight(x,y,on){
+ ctx.save();
+ // base do poste
+ ctx.fillStyle='#888'; ctx.fillRect(x-2,y-2,4,4);
+ // haste
+ ctx.strokeStyle='#999'; ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-18);ctx.stroke();
+ // braço
+ ctx.beginPath();ctx.moveTo(x,y-18);ctx.lineTo(x+8,y-22);ctx.stroke();
+ // luminária
+ ctx.fillStyle=on?'#ffe066':'#666';
+ ctx.fillRect(x+5,y-25,8,4);
+ if(on){
+   // halo de luz
+   ctx.globalAlpha=0.18;
+   ctx.fillStyle='#ffe066';
+   ctx.beginPath();ctx.arc(x+9,y-23,14,0,Math.PI*2);ctx.fill();
+   ctx.globalAlpha=1;
+ }
+ ctx.restore();
+}
+
+function draw(){
+ const h=Math.floor(gameMinutes/60)%24;
+ const m=gameMinutes%60;
+ const nightMode=(h>=18||h<6);
+
+ // progresso suave do dia (0 a 1440 minutos) pra interpolar cor do céu
+ const dayMin=(h*60+m)%1440;
+ // janelas de transição: amanhecer 5:00-6:30, anoitecer 17:30-19:00
+ function lerp(a,b,t){return a+(b-a)*Math.max(0,Math.min(1,t));}
+ function hexMix(c1,c2,t){
+   const p1=parseInt(c1.slice(1),16), p2=parseInt(c2.slice(1),16);
+   const r=Math.round(lerp((p1>>16)&255,(p2>>16)&255,t));
+   const g=Math.round(lerp((p1>>8)&255,(p2>>8)&255,t));
+   const b=Math.round(lerp(p1&255,p2&255,t));
+   return 'rgb('+r+','+g+','+b+')';
+ }
+ const NOITE='#0a0a1a', AMANHECER='#ff9a5c', DIA='#3a7d44', ANOITECER='#3a1a2a';
+ let skyCol;
+ if(dayMin>=300&&dayMin<390){ // 5:00-6:30 amanhecendo
+   skyCol=hexMix(NOITE,AMANHECER,(dayMin-300)/45<1?(dayMin-300)/45:1);
+   if(dayMin>=345) skyCol=hexMix(AMANHECER,DIA,(dayMin-345)/45);
+ } else if(dayMin>=1050&&dayMin<1140){ // 17:30-19:00 anoitecendo
+   skyCol=hexMix(DIA,ANOITECER,(dayMin-1050)/45<1?(dayMin-1050)/45:1);
+   if(dayMin>=1095) skyCol=hexMix(ANOITECER,NOITE,(dayMin-1095)/45);
+ } else if(dayMin>=390&&dayMin<1050){
+   skyCol=DIA;
+ } else {
+   skyCol=NOITE;
+ }
+
+ // === FUNDO ===
+ ctx.fillStyle=skyCol;
+ ctx.fillRect(0,0,400,600);
+
+ // fator de "quão noite está" (0=dia pleno, 1=noite plena) pra suavizar tudo junto
+ let nightT;
+ if(dayMin>=300&&dayMin<390) nightT=1-Math.max(0,Math.min(1,(dayMin-300)/90));
+ else if(dayMin>=1050&&dayMin<1140) nightT=Math.max(0,Math.min(1,(dayMin-1050)/90));
+ else if(dayMin>=390&&dayMin<1050) nightT=0;
+ else nightT=1;
+
+ // gramado lateral (mais escuro à noite, transição suave)
+ ctx.fillStyle=hexMix('#3a7d44','#1a3a1a',nightT);
+ ctx.fillRect(0,0,110,600);
+ ctx.fillRect(290,0,110,600);
+
+ // === CALÇADAS ===
+ ctx.fillStyle=hexMix('#c8bfb0','#8a8278',nightT);
+ ctx.fillRect(93,0,20,600);
+ ctx.fillRect(287,0,20,600);
+
+ // === MEIO-FIO ===
+ ctx.fillStyle=hexMix('#d0c8b8','#9a9288',nightT);
+ ctx.fillRect(108,0,5,600);
+ ctx.fillRect(287,0,5,600);
+ ctx.strokeStyle=nightMode?'#7a7268':'#b0a898'; ctx.lineWidth=0.5;
+ for(let y2=-40;y2<680;y2+=32){
+   const yy=(y2+scroll*0.3)%680;
+   ctx.beginPath();ctx.moveTo(108,yy);ctx.lineTo(113,yy);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(287,yy);ctx.lineTo(292,yy);ctx.stroke();
+ }
+
+ // === PRÉDIOS E CASAS (lado esquerdo) ===
+ const buildTypes=[0,2,1,4,3,2,0,4,1,3,0,2,4,1,3,2,0,1,4,3];
+ const totalBuildings=20;
+ const buildSpacing=140;
+ const buildCycle=totalBuildings*buildSpacing; // 2800px
+ for(let i=0;i<totalBuildings;i++){
+   const by=(i*buildSpacing+(scroll*0.3))%buildCycle-200;
+   if(by>-160&&by<620){
+     drawBuilding(8,by,buildTypes[i%buildTypes.length]);
+   }
+ }
+ // === PRÉDIOS E CASAS (lado direito) ===
+ for(let i=0;i<totalBuildings;i++){
+   const by=(i*buildSpacing+70+(scroll*0.3))%buildCycle-200;
+   if(by>-160&&by<620){
+     drawBuilding(310,by,buildTypes[(i+7)%buildTypes.length]);
+   }
+ }
+
+ // === OBJETOS NA CALÇADA (árvores, lixeiras, arbustos) ===
+ const sidewalkObjs=[
+   {sx:0.3,sy:0.05,t:0},{sx:0.3,sy:0.38,t:1},{sx:0.3,sy:0.62,t:0},{sx:0.3,sy:0.85,t:2},
+   {sx:0.7,sy:0.15,t:2},{sx:0.7,sy:0.45,t:0},{sx:0.7,sy:0.72,t:1},{sx:0.7,sy:0.92,t:0},
+ ];
+ sidewalkObjs.forEach(function(o){
+   const ox=o.sx<0.5?103:297;
+   const oy=(o.sy*900+scroll*0.45)%900-60;
+   if(oy>-20&&oy<620) drawSidewalkObject(ox,oy,o.t);
+ });
+
+ // === POSTES (calçada esquerda e direita) ===
+ const poleSpacing=130;
+ for(let i=0;i<8;i++){
+   const py=(i*poleSpacing+(scroll*0.45))%1200-80;
+   if(py>-40&&py<620){
+     // poste esquerdo (braço aponta para a rua = direita)
+     drawStreetlight(105,py,nightMode);
+     // poste direito (braço aponta para a rua = esquerda, espelhado)
+     ctx.save();
+     ctx.translate(295,py);ctx.scale(-1,1);ctx.translate(-295,0);
+     // reaplica translate para coordenadas locais
+     ctx.restore();
+     ctx.save();
+     ctx.fillStyle='#888'; ctx.fillRect(293,py-2,4,4);
+     ctx.strokeStyle='#999'; ctx.lineWidth=2;
+     ctx.beginPath();ctx.moveTo(295,py);ctx.lineTo(295,py-18);ctx.stroke();
+     ctx.beginPath();ctx.moveTo(295,py-18);ctx.lineTo(287,py-22);ctx.stroke();
+     ctx.fillStyle=nightMode?'#ffe066':'#666';
+     ctx.fillRect(282,py-25,8,4);
+     if(nightMode){
+       ctx.globalAlpha=0.18; ctx.fillStyle='#ffe066';
+       ctx.beginPath();ctx.arc(286,py-23,14,0,Math.PI*2);ctx.fill();
+       ctx.globalAlpha=1;
+     }
+     ctx.restore();
+   }
+ }
+
+ // === FIOS ENTRE POSTES ===
+ ctx.strokeStyle=nightMode?'#444':'#555'; ctx.lineWidth=0.8;
+ for(let i=0;i<8;i++){
+   const py1=(i*poleSpacing+(scroll*0.45))%1200-80;
+   const py2=py1+poleSpacing;
+   if(py1>-40&&py1<620){
+     // fio esquerdo
+     ctx.beginPath();
+     ctx.moveTo(105,py1-20);
+     ctx.quadraticCurveTo(105,py1+poleSpacing/2+10,105,py2-20);
+     ctx.stroke();
+     // fio direito
+     ctx.beginPath();
+     ctx.moveTo(295,py1-20);
+     ctx.quadraticCurveTo(295,py1+poleSpacing/2+10,295,py2-20);
+     ctx.stroke();
+   }
+ }
+
+ // === ASFALTO BASE ===
+ ctx.fillStyle=hexMix('#3a3a3a','#252525',nightT);
+ ctx.fillRect(113,0,177,600);
+
+ // textura de asfalto
+ const ts=Math.floor(scroll/2);
+ for(let i=0;i<280;i++){
+   const gx=113+((i*73+ts*3)%177);
+   const gy=((i*137+ts*7)%620);
+   const gs=((i*31)%3)+1;
+   const gb=Math.round(lerp(40+((i*53)%28),28+((i*53)%18),nightT));
+   ctx.fillStyle='rgb('+gb+','+gb+','+gb+')';
+   ctx.fillRect(gx,gy,gs,gs);
+ }
+
+ // manchas de óleo
+ const oilSeeds=[{ox:0.25,oy:0.1,or:16},{ox:0.65,oy:0.55,or:11},{ox:0.4,oy:0.82,or:20},{ox:0.55,oy:0.3,or:9}];
+ oilSeeds.forEach(function(o){
+   const ox=113+o.ox*177;
+   const oy=(o.oy*900+scroll*0.6)%900-150;
+   ctx.save();
+   ctx.globalAlpha=0.16;
+   ctx.fillStyle='#001030';
+   ctx.beginPath();ctx.ellipse(ox,oy,o.or,o.or*0.5,0,0,Math.PI*2);ctx.fill();
+   ctx.restore();
+ });
+
+ // remendos de asfalto
+ const patches=[{px:0.22,py:0.2,pw:28,ph:16},{px:0.62,py:0.65,pw:22,ph:13},{px:0.38,py:0.88,pw:36,ph:11}];
+ patches.forEach(function(p){
+   const py2=(p.py*900+scroll*0.6)%900-150;
+   ctx.fillStyle=hexMix('#464646','#323232',nightT);
+   ctx.fillRect(113+p.px*177-p.pw/2,py2-p.ph/2,p.pw,p.ph);
+   ctx.strokeStyle='rgba(0,0,0,0.22)'; ctx.lineWidth=0.5;
+   ctx.strokeRect(113+p.px*177-p.pw/2,py2-p.ph/2,p.pw,p.ph);
+ });
+
+ // borda escura do asfalto
+ ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1.5;
+ ctx.beginPath();ctx.moveTo(113,0);ctx.lineTo(113,600);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(290,0);ctx.lineTo(290,600);ctx.stroke();
+
+ // === FAIXA CENTRAL ===
+ for(let y=-40;y<600;y+=40){
+   const yy=(y+scroll)%640;
+   ctx.fillStyle='rgba(180,150,0,0.22)';
+   ctx.fillRect(197,yy,7,24);
+   ctx.fillStyle=hexMix('#e8c800','#c8a800',nightT);
+   ctx.fillRect(198,yy,5,20);
+   if((y*3+17)%60<20){
+     ctx.fillStyle='rgba(255,255,255,0.1)';
+     ctx.fillRect(199,yy+2,2,8);
+   }
+ }
+
+ // === QUEBRA-MOLA (desenhado depois da faixa central, fica por cima) ===
+ {
+   const bumpY=(0.5*9000+scroll*0.6)%9000-150;
+   if(bumpY>-10&&bumpY<610){
+     const bx=113, bw=177, qmH=8;
+     ctx.fillStyle='rgba(0,0,0,0.28)';
+     ctx.fillRect(bx, bumpY+qmH/2, bw, 4);
+     ctx.fillStyle='#b08800';
+     ctx.fillRect(bx, bumpY-qmH/2, bw, qmH);
+     const sw=14;
+     for(let s=0;s*sw<bw;s++){
+       if(s%2===0){
+         ctx.fillStyle='#f0c820';
+         ctx.fillRect(bx+s*sw, bumpY-qmH/2+1, Math.min(sw,bw-s*sw), qmH-2);
+       }
+     }
+     ctx.fillStyle='rgba(255,255,200,0.35)';
+     ctx.fillRect(bx, bumpY-qmH/2, bw, 2);
+     ctx.fillStyle='rgba(0,0,0,0.22)';
+     ctx.fillRect(bx, bumpY+qmH/2-2, bw, 2);
+   }
+ }
+
+ // === LUZ AMBIENTE NOTURNA DOS POSTES NA PISTA ===
+ if(nightMode){
+   for(let i=0;i<8;i++){
+     const py=(i*poleSpacing+(scroll*0.45))%1200-80;
+     if(py>-60&&py<640){
+       ctx.save();
+       ctx.globalAlpha=0.06;
+       ctx.fillStyle='#ffe066';
+       ctx.beginPath();ctx.ellipse(113,py-20,40,30,0,0,Math.PI*2);ctx.fill();
+       ctx.beginPath();ctx.ellipse(290,py-20,40,30,0,0,Math.PI*2);ctx.fill();
+       ctx.restore();
+     }
+   }
+ }
+
+ // === TANQUE E DINHEIRO (fundo visível) ===
+ fuels.forEach(function(f){
+   ctx.fillStyle='rgba(0,0,0,0.55)';
+   ctx.beginPath();ctx.roundRect(f.x-18,f.y-26,36,30,6);ctx.fill();
+   ctx.strokeStyle='#f39c12'; ctx.lineWidth=1.5;
+   ctx.beginPath();ctx.roundRect(f.x-18,f.y-26,36,30,6);ctx.stroke();
+   ctx.font='22px Arial'; ctx.textAlign='center';
+   ctx.fillText('⛽',f.x,f.y-2);
+   ctx.textAlign='left';
+ });
+
+ cashs.forEach(function(c){
+   ctx.fillStyle='rgba(0,0,0,0.55)';
+   ctx.beginPath();ctx.roundRect(c.x-16,c.y-24,32,28,6);ctx.fill();
+   ctx.strokeStyle='#2ecc71'; ctx.lineWidth=1.5;
+   ctx.beginPath();ctx.roundRect(c.x-16,c.y-24,32,28,6);ctx.stroke();
+   ctx.font='20px Arial'; ctx.textAlign='center';
+   ctx.fillText('💸',c.x,c.y-2);
+   ctx.textAlign='left';
+ });
+
+ if(raining){
+   // névoa escura leve por cima da cena (clima carregado)
+   ctx.fillStyle='rgba(20,25,40,0.12)';
+   ctx.fillRect(0,0,400,600);
+   // gotas em ângulo, com variação de comprimento/opacidade (profundidade)
+   ctx.lineCap='round';
+   rainDrops.forEach(d=>{
+     ctx.strokeStyle='rgba(190,200,255,'+d.alpha+')';
+     ctx.lineWidth=d.len>16?1.6:1;
+     ctx.beginPath();
+     ctx.moveTo(d.x,d.y);
+     ctx.lineTo(d.x-d.drift*2.2,d.y+d.len);
+     ctx.stroke();
+   });
+ }
+ traffic.forEach(drawVehicle);
+
+
+ // === OPALA SS BRANCO - VISTA DE CIMA V18 ===
+ // bounce do quebra-mola: desloca levemente pro topo (carro "sobe" e volta)
+ const cx=px, cy=497-playerBounce*1.5;
+ const hw=13, hh=25;
+
+ ctx.save();
+
+ // pneus
+ ctx.fillStyle='#111';
+ ctx.fillRect(cx-hw-5, cy-hh+6,    5,9);
+ ctx.fillRect(cx+hw,   cy-hh+6,    5,9);
+ ctx.fillRect(cx-hw-5, cy+hh-15,   5,9);
+ ctx.fillRect(cx+hw,   cy+hh-15,   5,9);
+ ctx.fillStyle='#555';
+ ctx.fillRect(cx-hw-4, cy-hh+8,    3,5);
+ ctx.fillRect(cx+hw+1, cy-hh+8,    3,5);
+ ctx.fillRect(cx-hw-4, cy+hh-13,   3,5);
+ ctx.fillRect(cx+hw+1, cy+hh-13,   3,5);
+
+ // carroceria branca
+ ctx.fillStyle='#f0ede8';
+ ctx.fillRect(cx-hw,cy-hh,hw*2,hh*2);
+ ctx.strokeStyle='#c5c2bc'; ctx.lineWidth=0.8;
+ ctx.strokeRect(cx-hw,cy-hh,hw*2,hh*2);
+
+ // capô
+ ctx.fillStyle='#e2dfd9';
+ ctx.fillRect(cx-hw,cy-hh,hw*2,15);
+ ctx.strokeStyle='#ccc'; ctx.lineWidth=0.5;
+ ctx.beginPath();ctx.moveTo(cx,cy-hh+2);ctx.lineTo(cx,cy-hh+13);ctx.stroke();
+
+ // faróis duplos
+ ctx.fillStyle='#fffbe0';
+ ctx.fillRect(cx-hw,cy-hh,5,3);
+ ctx.fillRect(cx+hw-5,cy-hh,5,3);
+ ctx.fillStyle='#ffe066';
+ ctx.fillRect(cx-hw,cy-hh,3,2);
+ ctx.fillRect(cx+hw-3,cy-hh,3,2);
+
+ // grade
+ ctx.fillStyle='#aaa';
+ ctx.fillRect(cx-hw+6,cy-hh,hw*2-12,2);
+
+ // parabrisa
+ ctx.fillStyle='rgba(130,205,238,0.82)';
+ ctx.fillRect(cx-hw+3,cy-hh+15,hw*2-6,9);
+ ctx.strokeStyle='rgba(180,230,255,0.5)'; ctx.lineWidth=0.4;
+ ctx.strokeRect(cx-hw+3,cy-hh+15,hw*2-6,9);
+
+ // teto
+ ctx.fillStyle='#d0cdc8';
+ ctx.fillRect(cx-hw+3,cy-hh+24,hw*2-6,16);
+
+ // vidro traseiro
+ ctx.fillStyle='rgba(120,195,228,0.70)';
+ ctx.fillRect(cx-hw+3,cy-hh+40,hw*2-6,7);
+
+ // faixa SS vermelha lateral
+ ctx.fillStyle='#cc0000';
+ ctx.fillRect(cx-hw,cy-4,2,10);
+ ctx.fillRect(cx+hw-2,cy-4,2,10);
+
+ // espelhos
+ ctx.fillStyle='#bbb';
+ ctx.fillRect(cx-hw-3,cy-hh+17,3,5);
+ ctx.fillRect(cx+hw,  cy-hh+17,3,5);
+
+ // tampa porta-malas
+ ctx.fillStyle='#dedad3';
+ ctx.fillRect(cx-hw,cy+hh-9,hw*2,9);
+
+ // lanternas traseiras
+ ctx.fillStyle='#cc0000';
+ ctx.fillRect(cx-hw,cy+hh-4,7,4);
+ ctx.fillRect(cx+hw-7,cy+hh-4,7,4);
+ ctx.fillStyle='#ff3300';
+ ctx.fillRect(cx-hw,cy+hh-4,4,2);
+ ctx.fillRect(cx+hw-4,cy+hh-4,4,2);
+
+ // para-choque
+ ctx.fillStyle='#bbb';
+ ctx.fillRect(cx-hw,cy+hh,hw*2,2);
+
+ // PAREDÃO - 2 falantes pulsando
+ const pulse=!radio.paused?(Math.sin(Date.now()/120)+1)*2.5:0;
+ ctx.fillStyle='#111';
+ ctx.fillRect(cx-hw+2,cy+hh-14,hw*2-4,10);
+ ctx.fillStyle='#1a1a1a';
+ ctx.fillRect(cx-hw+3,cy+hh-13,hw*2-6,8);
+ ctx.fillStyle='#cc0000';
+ ctx.fillRect(cx-4,cy+hh-12,8,6);
+ ctx.fillStyle='#fff'; ctx.font='bold 5px Arial'; ctx.textAlign='center';
+ ctx.fillText('SS',cx,cy+hh-7); ctx.textAlign='left';
+ const pr=3.5+pulse*0.4;
+ ctx.fillStyle='#000';
+ ctx.beginPath();ctx.arc(cx-8,cy+hh-9,pr,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#3a3a3a';
+ ctx.beginPath();ctx.arc(cx-8,cy+hh-9,pr*0.55,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#666';
+ ctx.beginPath();ctx.arc(cx-8,cy+hh-9,pr*0.28,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#000';
+ ctx.beginPath();ctx.arc(cx+8,cy+hh-9,pr,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#3a3a3a';
+ ctx.beginPath();ctx.arc(cx+8,cy+hh-9,pr*0.55,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#666';
+ ctx.beginPath();ctx.arc(cx+8,cy+hh-9,pr*0.28,0,Math.PI*2);ctx.fill();
+
+ ctx.restore();
+
+ // === RELÂMPAGO (desenhado por último, por cima de tudo) ===
+ if(lightning.active && lightning.flashAlpha>0.02){
+   // flash geral iluminando a tela
+   ctx.fillStyle='rgba(255,255,255,'+(lightning.flashAlpha*0.55)+')';
+   ctx.fillRect(0,0,400,600);
+   // raio em zigue-zague, visível só nos primeiros instantes do flash
+   if(lightning.timer<3){
+     ctx.save();
+     ctx.globalAlpha=Math.min(1,lightning.flashAlpha*1.3);
+     ctx.strokeStyle='#fffde8';
+     ctx.lineWidth=2.4;
+     ctx.shadowColor='#fffde8';
+     ctx.shadowBlur=8;
+     const bx=lightning.boltSeed;
+     ctx.beginPath();
+     ctx.moveTo(bx,0);
+     ctx.lineTo(bx-12,90);
+     ctx.lineTo(bx+8,150);
+     ctx.lineTo(bx-18,230);
+     ctx.lineTo(bx+4,300);
+     ctx.stroke();
+     ctx.restore();
+   }
+ }
+
+ // === ANIMAÇÃO DE BATIDA (só faíscas, sem exagero) ===
+ if(crashAnim.active && crashAnim.timer>0){
+   const t=crashAnim.timer/crashAnim.duration;
+   const cx2=crashAnim.x;
+   const cy2=crashAnim.y;
+   ctx.save();
+   const nSparks=6;
+   for(let s=0;s<nSparks;s++){
+     const ang=(s/nSparks)*Math.PI*2;
+     const dist=(14+s*3)*(1-t+0.15);
+     const sx=cx2+Math.cos(ang)*dist;
+     const sy=cy2+Math.sin(ang)*dist;
+     ctx.globalAlpha=t*0.85;
+     ctx.beginPath();
+     ctx.strokeStyle=(s%2===0)?'#ffcc00':'#ff7700';
+     ctx.lineWidth=1.8;
+     ctx.moveTo(cx2,cy2);
+     ctx.lineTo(sx,sy);
+     ctx.stroke();
+   }
+   ctx.restore();
+ }
+ }
+setInterval(()=>{if(started)saveGame();},5000); function loop(){update();draw();requestAnimationFrame(loop)}
+loop();
+</script>
+</body></html>
